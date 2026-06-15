@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RunePulse • OSRS Investing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        :root {
+            --primary: #f59e0b;
+        }
+        
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+        
+        .font-display {
+            font-family: 'Space Grotesk', 'Inter', system_ui, sans-serif;
+            font-weight: 600;
+        }
+
+        .osrs-dark {
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .section-card {
+            background-color: #1e2937;
+            border: 1px solid #334155;
+        }
+
+        .item-card {
+            background-color: #1e2937;
+            border: 1px solid #334155;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .item-card:hover {
+            transform: translateY(-2px);
+            border-color: #475569;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        .price-up {
+            color: #22c55e;
+        }
+        
+        .price-down {
+            color: #ef4444;
+        }
+
+        .gold-accent {
+            color: #f59e0b;
+        }
+
+        .metric-value {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .data-table th {
+            background-color: #334155;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .data-table td {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .flip-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+        }
+
+        .nav-active {
+            background-color: #334155;
+            color: white;
+            border-radius: 0.375rem;
+        }
+
+        .modal {
+            animation: modalPopIn 0.2s ease-out forwards;
+        }
+
+        @keyframes modalPopIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .osrs-header {
+            background: linear-gradient(to right, #0f172a, #1e2937);
+            border-bottom: 1px solid #334155;
+        }
+
+        .stat-number {
+            font-variant-numeric: tabular-nums;
+            font-feature-settings: "tnum";
+        }
+
+        .item-icon-placeholder {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #334155, #475569);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-weight: 700;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .demand-growing {
+            background-color: #052e16;
+            color: #4ade80;
+            border: 1px solid #166534;
+        }
+        
+        .demand-shrinking {
+            background-color: #450a0a;
+            color: #f87171;
+            border: 1px solid #991b1b;
+        }
+        
+        .demand-balanced {
+            background-color: #1e2937;
+            color: #94a3b8;
+            border: 1px solid #475569;
+        }
+
+        .profit-positive {
+            background-color: #052e16;
+            color: #4ade80;
+        }
+    </style>
+</head>
+<body class="osrs-dark text-slate-200">
+    <!-- Navbar -->
+    <nav class="border-b border-slate-700 bg-slate-900 sticky top-0 z-50">
+        <div class="max-w-screen-2xl mx-auto">
+            <div class="px-8 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-x-4">
+                    <!-- Logo -->
+                    <div class="flex items-center gap-x-3">
+                        <div class="w-11 h-11 bg-amber-500 rounded-2xl flex items-center justify-center shadow-inner">
+                            <i class="fa-solid fa-chart-line text-slate-900 text-3xl"></i>
+                        </div>
+                        <div>
+                            <span class="font-display text-3xl font-semibold tracking-tighter">RunePulse</span>
+                            <span class="text-amber-500 text-sm font-medium tracking-[2px] ml-0.5">OSRS</span>
+                        </div>
+                    </div>
+                    <div class="hidden md:block px-3 py-1.5 bg-slate-800 rounded-full text-xs font-medium text-slate-400 border border-slate-700">
+                        GRAND EXCHANGE INTEL
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-x-4">
+                    <!-- Status -->
+                    <div class="flex items-center gap-x-2 text-sm">
+                        <div class="flex items-center gap-x-1.5 px-3 py-1 bg-slate-800 rounded-full border border-slate-700">
+                            <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                            <span class="text-emerald-400 text-xs font-medium">LIVE DATA</span>
+                        </div>
+                        <span id="last-updated" class="text-xs text-slate-500 font-mono"></span>
+                    </div>
+
+                    <!-- Refresh -->
+                    <button onclick="refreshAllData()" 
+                            class="flex items-center gap-x-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 transition-colors rounded-2xl text-sm font-medium border border-slate-700 hover:border-slate-600">
+                        <i class="fa-solid fa-sync-alt mr-2"></i>
+                        <span>Refresh</span>
+                    </button>
+
+                    <!-- Watchlist count -->
+                    <div onclick="showWatchlist()" 
+                         class="flex items-center gap-x-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 transition-colors rounded-2xl text-sm font-medium border border-slate-700 cursor-pointer">
+                        <i class="fa-solid fa-heart text-rose-400"></i>
+                        <span id="watchlist-count">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-screen-2xl mx-auto px-8 py-8">
+        
+        <!-- Hero Header -->
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-y-4 mb-8">
+            <div>
+                <h1 class="font-display text-5xl tracking-tighter font-semibold">Market Intel</h1>
+                <p class="text-xl text-slate-400 mt-1">Find items with big price moves, surging demand &amp; easy flips</p>
+            </div>
+            <div class="flex items-center gap-x-3 text-sm">
+                <div class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-3xl flex items-center gap-x-2">
+                    <i class="fa-solid fa-globe fa-fw text-emerald-400"></i>
+                    <span>Data from <span class="font-medium text-white">prices.runescape.wiki</span> + RuneLite</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="section-card rounded-3xl p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-widest text-slate-500 font-medium">Items Tracked</p>
+                        <p id="metric-items" class="text-4xl font-semibold tabular-nums mt-1 stat-number">—</p>
+                    </div>
+                    <i class="fa-solid fa-database text-3xl text-slate-600"></i>
+                </div>
+            </div>
+            <div class="section-card rounded-3xl p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-widest text-slate-500 font-medium">Avg Margin</p>
+                        <p id="metric-avg-margin" class="text-4xl font-semibold tabular-nums mt-1 gold-accent stat-number">—</p>
+                    </div>
+                    <i class="fa-solid fa-percent text-3xl text-amber-500/70"></i>
+                </div>
+            </div>
+            <div class="section-card rounded-3xl p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-widest text-slate-500 font-medium">Highest Volume (5m)</p>
+                        <p id="metric-top-volume-name" class="text-lg font-semibold mt-1 truncate max-w-[180px]">—</p>
+                        <p id="metric-top-volume-value" class="text-emerald-400 text-sm tabular-nums">— trades</p>
+                    </div>
+                    <i class="fa-solid fa-chart-bar text-3xl text-emerald-500/70"></i>
+                </div>
+            </div>
+            <div class="section-card rounded-3xl p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-widest text-slate-500 font-medium">Best Margin Pick</p>
+                        <p id="metric-best-margin-name" class="text-lg font-semibold mt-1 truncate max-w-[180px]">—</p>
+                        <p id="metric-best-margin-value" class="text-emerald-400 text-sm tabular-nums">—% margin</p>
+                    </div>
+                    <i class="fa-solid fa-tachometer-alt text-3xl text-amber-500/70"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters & Search -->
+        <div class="section-card rounded-3xl p-6 mb-6">
+            <div class="flex flex-col lg:flex-row gap-4 items-end">
+                <!-- Search -->
+                <div class="flex-1">
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5 px-1">SEARCH ITEMS</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-500"></i>
+                        <input id="search-input" type="text" placeholder="Search by item name (e.g. whip, rune, bond...)" 
+                               class="w-full bg-slate-900 border border-slate-700 focus:border-amber-500 transition-colors pl-11 pr-4 py-3 rounded-2xl text-sm placeholder:text-slate-500"
+                               onkeyup="debounceFilter()">
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 px-1">MIN MARGIN %</label>
+                        <select id="filter-min-margin" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-sm">
+                            <option value="0">Any</option>
+                            <option value="2">2%+</option>
+                            <option value="4">4%+</option>
+                            <option value="6">6%+</option>
+                            <option value="8">8%+</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 px-1">MIN 5m VOLUME</label>
+                        <select id="filter-min-volume" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-sm">
+                            <option value="0">Any</option>
+                            <option value="100">100+</option>
+                            <option value="500">500+</option>
+                            <option value="2000">2,000+</option>
+                            <option value="10000">10,000+</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 px-1">MAX PRICE</label>
+                        <select id="filter-max-price" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-sm">
+                            <option value="999999999">Any</option>
+                            <option value="10000">Under 10k gp</option>
+                            <option value="50000">Under 50k gp</option>
+                            <option value="250000">Under 250k gp</option>
+                            <option value="1000000">Under 1m gp</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 px-1">MEMBERS</label>
+                        <select id="filter-members" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-sm">
+                            <option value="all">All Items</option>
+                            <option value="true">Members Only</option>
+                            <option value="false">F2P Only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex items-center gap-x-2 mb-4 border-b border-slate-700 pb-1">
+            <button onclick="switchTab(0)" id="tab-0"
+                    class="nav-active px-5 py-2 text-sm font-semibold flex items-center gap-x-2">
+                <i class="fa-solid fa-fire"></i>
+                <span>Recommended Picks</span>
+            </button>
+            <button onclick="switchTab(1)" id="tab-1"
+                    class="px-5 py-2 text-sm font-semibold flex items-center gap-x-2 hover:bg-slate-800 rounded-xl transition-colors">
+                <i class="fa-solid fa-chart-bar"></i>
+                <span>High Demand</span>
+            </button>
+            <button onclick="switchTab(2)" id="tab-2"
+                    class="px-5 py-2 text-sm font-semibold flex items-center gap-x-2 hover:bg-slate-800 rounded-xl transition-colors">
+                <i class="fa-solid fa-percentage"></i>
+                <span>Good Margins</span>
+            </button>
+            <button onclick="switchTab(3)" id="tab-3"
+                    class="px-5 py-2 text-sm font-semibold flex items-center gap-x-2 hover:bg-slate-800 rounded-xl transition-colors">
+                <i class="fa-solid fa-table"></i>
+                <span>All Items</span>
+            </button>
+        </div>
+
+        <!-- Content Area -->
+        <div id="tab-content-0" class="tab-content">
+            <!-- Recommended Picks -->
+            <div class="mb-3 flex items-center justify-between px-1">
+                <div>
+                    <span class="font-semibold text-lg">Recommended Picks</span>
+                    <span class="text-xs text-slate-500 ml-2">Top opportunities right now • Sorted by volume × margin score</span>
+                </div>
+                <span class="text-xs px-3 py-1 bg-amber-500/10 text-amber-400 rounded-full font-medium">AI-curated for flips</span>
+            </div>
+            <div id="recommended-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <div id="tab-content-1" class="tab-content hidden">
+            <div class="mb-3 px-1">
+                <span class="font-semibold text-lg">High Demand / High Liquidity</span>
+                <span class="text-xs text-slate-500 ml-2">Easy to buy and resell quickly • Sorted by 5-minute trade volume</span>
+            </div>
+            <div id="demand-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <div id="tab-content-2" class="tab-content hidden">
+            <div class="mb-3 px-1">
+                <span class="font-semibold text-lg">High Margin Opportunities</span>
+                <span class="text-xs text-slate-500 ml-2">Largest spreads between buy &amp; sell • Watch for volatility</span>
+            </div>
+            <div id="margin-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <div id="tab-content-3" class="tab-content hidden">
+            <div class="mb-3 flex items-center justify-between px-1">
+                <span class="font-semibold text-lg">All Active Items</span>
+                <span id="all-items-count" class="text-xs text-slate-500"></span>
+            </div>
+            
+            <!-- Table View -->
+            <div class="section-card rounded-3xl overflow-hidden">
+                <table class="data-table w-full text-sm">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-4 text-left cursor-pointer" onclick="sortTable('name')">ITEM <i class="fa-solid fa-sort ml-1 text-xs"></i></th>
+                            <th class="px-4 py-4 text-right cursor-pointer" onclick="sortTable('low')">BUY (LOW) <i class="fa-solid fa-sort ml-1 text-xs"></i></th>
+                            <th class="px-4 py-4 text-right cursor-pointer" onclick="sortTable('high')">SELL (HIGH) <i class="fa-solid fa-sort ml-1 text-xs"></i></th>
+                            <th class="px-4 py-4 text-right cursor-pointer" onclick="sortTable('margin')">MARGIN <i class="fa-solid fa-sort ml-1 text-xs"></i></th>
+                            <th class="px-4 py-4 text-right cursor-pointer" onclick="sortTable('volume5m')">5m VOLUME <i class="fa-solid fa-sort ml-1 text-xs"></i></th>
+                            <th class="px-4 py-4 text-center">DEMAND</th>
+                            <th class="px-6 py-4 text-center w-24">ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="all-items-tbody" class="divide-y divide-slate-700 text-sm">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer note -->
+        <div class="mt-8 text-center">
+            <p class="text-xs text-slate-500">
+                Data refreshes from RuneLite via prices.runescape.wiki • Not affiliated with Jagex • 
+                <span class="font-medium">Always verify in-game before trading large amounts</span> • 
+                GE tax applies on sales
+            </p>
+        </div>
+    </div>
+
+    <!-- Item Detail Modal -->
+    <div id="item-modal" onclick="if (event.target.id === 'item-modal') hideModal()" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" class="modal bg-slate-800 border border-slate-700 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <!-- Modal Header -->
+            <div class="px-8 pt-6 pb-4 border-b border-slate-700 flex items-start justify-between">
+                <div class="flex items-center gap-x-4">
+                    <div id="modal-icon" class="item-icon-placeholder text-2xl w-14 h-14"></div>
+                    <div>
+                        <div class="flex items-center gap-x-3">
+                            <h3 id="modal-name" class="font-display text-3xl font-semibold tracking-tight"></h3>
+                            <span id="modal-members-badge" class="hidden text-[10px] px-2.5 py-px bg-emerald-900 text-emerald-400 rounded font-bold tracking-wider">MEMBERS</span>
+                        </div>
+                        <p id="modal-examine" class="text-sm text-slate-400 mt-0.5 max-w-md"></p>
+                    </div>
+                </div>
+                <button onclick="hideModal()" class="text-slate-400 hover:text-white p-2 -mr-2">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <div class="p-8 flex-1 overflow-auto">
+                <!-- Price Stats -->
+                <div class="grid grid-cols-3 gap-4 mb-8">
+                    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4">
+                        <div class="text-xs text-slate-400">BUY PRICE (LOW)</div>
+                        <div id="modal-low" class="text-3xl font-semibold tabular-nums mt-1 text-emerald-400"></div>
+                        <div class="text-[10px] text-slate-500 mt-1">Instant sell price • Good entry</div>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4">
+                        <div class="text-xs text-slate-400">SELL PRICE (HIGH)</div>
+                        <div id="modal-high" class="text-3xl font-semibold tabular-nums mt-1 text-amber-400"></div>
+                        <div class="text-[10px] text-slate-500 mt-1">Instant buy price • Good exit</div>
+                    </div>
+                    <div class="bg-slate-900 border border-emerald-900/50 rounded-2xl p-4">
+                        <div class="text-xs text-emerald-400">POTENTIAL MARGIN</div>
+                        <div id="modal-margin" class="text-3xl font-semibold tabular-nums mt-1 text-emerald-400"></div>
+                        <div id="modal-margin-pct" class="text-sm text-emerald-400 font-medium"></div>
+                    </div>
+                </div>
+
+                <!-- Demand & Activity -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <span class="uppercase text-xs tracking-[1.5px] font-semibold text-slate-400">5-Minute Activity</span>
+                        <span id="modal-demand-badge" class="flip-badge px-3 py-1 text-xs"></span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4">
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-slate-400">Buy-side volume</span>
+                                <span id="modal-high-vol" class="font-mono font-medium"></span>
+                            </div>
+                            <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div id="modal-high-vol-bar" class="h-2 bg-emerald-500 rounded-full transition-all" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4">
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-slate-400">Sell-side volume</span>
+                                <span id="modal-low-vol" class="font-mono font-medium"></span>
+                            </div>
+                            <div class="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div id="modal-low-vol-bar" class="h-2 bg-rose-500 rounded-full transition-all" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <p id="modal-demand-insight" class="text-xs text-slate-400 mt-3 px-1"></p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4">
+                        <div class="text-xs text-slate-400 mb-1">GE BUY LIMIT</div>
+                        <div id="modal-limit" class="font-semibold tabular-nums"></div>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4">
+                        <div class="text-xs text-slate-400 mb-1">HIGH ALCH VALUE</div>
+                        <div id="modal-high-alch" class="font-semibold tabular-nums"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="border-t border-slate-700 px-8 py-5 bg-slate-900 flex items-center justify-between gap-x-3">
+                <button onclick="toggleWatchlistFromModal()" id="modal-watchlist-btn"
+                        class="flex-1 flex items-center justify-center gap-x-2 px-5 py-3 rounded-2xl text-sm font-semibold transition-all bg-slate-700 hover:bg-slate-600">
+                    <i class="fa-solid fa-heart mr-2"></i>
+                    <span id="modal-watchlist-text">Add to Watchlist</span>
+                </button>
+                
+                <button onclick="hideModal()" 
+                        class="flex-1 px-5 py-3 rounded-2xl text-sm font-semibold bg-slate-700 hover:bg-slate-600 transition-all">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tailwind script
+        function initTailwind() {
+            document.documentElement.style.setProperty('--accent', '#f59e0b');
+            
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            'display': ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif']
+                        }
+                    }
+                }
+            };
+        }
+
+        // Global state
+        let allItems = [];
+        let currentTab = 0;
+        let currentSort = { column: 'volume5m', direction: 'desc' };
+        let watchlist = JSON.parse(localStorage.getItem('osrs_watchlist') || '[]');
+        let currentModalItem = null;
+
+        // Debounce helper
+        let debounceTimer;
+        function debounceFilter() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                applyFilters();
+            }, 250);
+        }
+
+        // Fetch with proper headers
+        async function fetchAPI(endpoint) {
+            const url = `https://prices.runescape.wiki/api/v1/osrs${endpoint}`;
+            const response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'RunePulse-OSRS-Invest-App/1.0 (personal project)'
+                }
+            });
+            if (!response.ok) throw new Error(`API error: ${response.status}`);
+            return response.json();
+        }
+
+        // Load all data
+        async function loadAllData() {
+            const loadingEl = document.createElement('div');
+            loadingEl.className = 'fixed inset-0 bg-slate-950/90 flex items-center justify-center z-[200]';
+            loadingEl.innerHTML = `
+                <div class="text-center">
+                    <div class="inline-block w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p class="text-lg font-medium">Fetching live Grand Exchange data...</p>
+                    <p class="text-xs text-slate-400 mt-1">This may take a few seconds</p>
+                </div>
+            `;
+            document.body.appendChild(loadingEl);
+
+            try {
+                // Fetch in parallel
+                const [mappingRes, latestRes, fiveMinRes] = await Promise.all([
+                    fetchAPI('/mapping'),
+                    fetchAPI('/latest'),
+                    fetchAPI('/5m')
+                ]);
+
+                // Process mapping into lookup
+                const mappingMap = {};
+                mappingRes.forEach(item => {
+                    mappingMap[item.id] = item;
+                });
+
+                // Merge data
+                allItems = [];
+                
+                Object.keys(latestRes).forEach(id => {
+                    const latest = latestRes[id];
+                    const meta = mappingMap[id] || {};
+                    const fiveMin = fiveMinRes[id] || {};
+                    
+                    // Only include items with meaningful data
+                    if (!latest.high && !latest.low) return;
+                    
+                    const high = latest.high || 0;
+                    const low = latest.low || 0;
+                    const margin = high - low;
+                    const marginPct = low > 0 ? ((margin / low) * 100) : 0;
+                    
+                    const highVol = fiveMin.highPriceVolume || 0;
+                    const lowVol = fiveMin.lowPriceVolume || 0;
+                    const totalVol = highVol + lowVol;
+                    
+                    let demandLabel = 'Balanced';
+                    let demandClass = 'demand-balanced';
+                    let demandIcon = 'fa-balance-scale';
+                    
+                    if (highVol > lowVol * 1.4 && totalVol > 50) {
+                        demandLabel = 'Growing Demand';
+                        demandClass = 'demand-growing';
+                        demandIcon = 'fa-arrow-trend-up';
+                    } else if (lowVol > highVol * 1.4 && totalVol > 50) {
+                        demandLabel = 'Selling Pressure';
+                        demandClass = 'demand-shrinking';
+                        demandIcon = 'fa-arrow-trend-down';
+                    }
+                    
+                    const item = {
+                        id: parseInt(id),
+                        name: meta.name || `Item #${id}`,
+                        icon: meta.icon || '',
+                        examine: meta.examine || '',
+                        members: meta.members || false,
+                        limit: meta.limit || 0,
+                        lowalch: meta.lowalch || 0,
+                        highalch: meta.highalch || 0,
+                        high: high,
+                        low: low,
+                        highTime: latest.highTime,
+                        lowTime: latest.lowTime,
+                        avgHighPrice: fiveMin.avgHighPrice || high,
+                        highPriceVolume: highVol,
+                        avgLowPrice: fiveMin.avgLowPrice || low,
+                        lowPriceVolume: lowVol,
+                        margin: margin,
+                        marginPct: parseFloat(marginPct.toFixed(1)),
+                        volume5m: totalVol,
+                        demandLabel: demandLabel,
+                        demandClass: demandClass,
+                        demandIcon: demandIcon
+                    };
+                    
+                    allItems.push(item);
+                });
+
+                // Sort initially by volume
+                allItems.sort((a, b) => b.volume5m - a.volume5m);
+
+                updateMetrics();
+                updateWatchlistCount();
+                applyFilters(); // Render initial view
+                
+                // Set last updated
+                const now = new Date();
+                document.getElementById('last-updated').innerHTML = 
+                    `Updated ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                
+            } catch (error) {
+                console.error('Failed to load data:', error);
+                alert('Failed to fetch live data. Please check your internet connection and try refreshing.');
+            } finally {
+                loadingEl.remove();
+            }
+        }
+
+        function updateMetrics() {
+            if (!allItems.length) return;
+
+            // Items tracked
+            document.getElementById('metric-items').textContent = allItems.length.toLocaleString();
+
+            // Avg margin
+            const avgMargin = allItems.reduce((sum, i) => sum + i.marginPct, 0) / allItems.length;
+            document.getElementById('metric-avg-margin').innerHTML = `${avgMargin.toFixed(1)}<span class="text-xl">%</span>`;
+
+            // Top volume
+            const topVol = allItems[0];
+            document.getElementById('metric-top-volume-name').textContent = topVol.name;
+            document.getElementById('metric-top-volume-value').innerHTML = `${topVol.volume5m.toLocaleString()} trades`;
+
+            // Best margin
+            const bestMargin = [...allItems].sort((a, b) => b.marginPct - a.marginPct)[0];
+            document.getElementById('metric-best-margin-name').textContent = bestMargin.name;
+            document.getElementById('metric-best-margin-value').innerHTML = `${bestMargin.marginPct}% margin`;
+        }
+
+        function updateWatchlistCount() {
+            document.getElementById('watchlist-count').textContent = watchlist.length;
+        }
+
+        function computeScore(item) {
+            // Simple investment score: volume weight + margin weight
+            const volScore = Math.log10(Math.max(item.volume5m, 1)) * 10;
+            const marginScore = item.marginPct * 3;
+            return volScore + marginScore;
+        }
+
+        function getFilteredItems() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+            const minMargin = parseFloat(document.getElementById('filter-min-margin').value);
+            const minVolume = parseInt(document.getElementById('filter-min-volume').value);
+            const maxPrice = parseInt(document.getElementById('filter-max-price').value);
+            const membersFilter = document.getElementById('filter-members').value;
+
+            return allItems.filter(item => {
+                // Search
+                if (searchTerm && !item.name.toLowerCase().includes(searchTerm)) {
+                    return false;
+                }
+                
+                // Margin
+                if (item.marginPct < minMargin) return false;
+                
+                // Volume
+                if (item.volume5m < minVolume) return false;
+                
+                // Max price (use low as buy price)
+                if (item.low > maxPrice) return false;
+                
+                // Members
+                if (membersFilter === 'true' && !item.members) return false;
+                if (membersFilter === 'false' && item.members) return false;
+                
+                return true;
+            });
+        }
+
+        function applyFilters() {
+            const filtered = getFilteredItems();
+            
+            // Re-render current tab
+            renderCurrentTab(filtered);
+            
+            // Update all items count if on that tab
+            if (currentTab === 3) {
+                document.getElementById('all-items-count').textContent = `${filtered.length} items`;
+            }
+        }
+
+        function renderCurrentTab(filteredItems) {
+            const sorted = [...filteredItems];
+            
+            // Apply current sort if on all items tab
+            if (currentTab === 3 && currentSort.column) {
+                sorted.sort((a, b) => {
+                    let valA = a[currentSort.column];
+                    let valB = b[currentSort.column];
+                    
+                    if (typeof valA === 'string') {
+                        return currentSort.direction === 'asc' 
+                            ? valA.localeCompare(valB) 
+                            : valB.localeCompare(valA);
+                    } else {
+                        return currentSort.direction === 'asc' ? valA - valB : valB - valA;
+                    }
+                });
+            }
+
+            if (currentTab === 0) {
+                // Recommended: top scored
+                const scored = sorted.map(item => ({...item, score: computeScore(item)}))
+                                   .sort((a, b) => b.score - a.score)
+                                   .slice(0, 12);
+                renderItemGrid('recommended-grid', scored, true);
+            } 
+            else if (currentTab === 1) {
+                // High demand
+                const demandSorted = [...sorted].sort((a, b) => b.volume5m - a.volume5m).slice(0, 12);
+                renderItemGrid('demand-grid', demandSorted, true);
+            } 
+            else if (currentTab === 2) {
+                // Good margins
+                const marginSorted = [...sorted].sort((a, b) => b.marginPct - a.marginPct).slice(0, 12);
+                renderItemGrid('margin-grid', marginSorted, true);
+            } 
+            else if (currentTab === 3) {
+                renderAllItemsTable(sorted);
+            }
+        }
+
+        function renderItemGrid(containerId, items, showScore = false) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-slate-400">
+                        <i class="fa-solid fa-search text-4xl mb-3 opacity-40"></i>
+                        <p>No items match your filters.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            items.forEach(item => {
+                const isWatched = watchlist.includes(item.id);
+                
+                const cardHTML = `
+                    <div class="item-card rounded-3xl p-5 cursor-pointer flex flex-col h-full" onclick="showItemModal(${item.id})">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center gap-x-3">
+                                <div class="item-icon-placeholder text-xl w-11 h-11">
+                                    ${item.name.substring(0, 1).toUpperCase()}
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-semibold text-lg leading-tight pr-2">${item.name}</div>
+                                    ${item.members ? '<span class="inline-block mt-1 text-[10px] px-2 py-px bg-emerald-900 text-emerald-400 rounded font-bold tracking-wider">MEMBERS</span>' : ''}
+                                </div>
+                            </div>
+                            
+                            <button onclick="event.stopImmediatePropagation(); toggleWatchlist(${item.id}, this)" 
+                                    class="text-xl ${isWatched ? 'text-rose-400' : 'text-slate-500 hover:text-rose-300'} transition-colors">
+                                <i class="fa-solid fa-heart"></i>
+                            </button>
+                        </div>
+
+                        <div class="mt-auto">
+                            <!-- Prices -->
+                            <div class="flex justify-between items-end mb-3">
+                                <div>
+                                    <div class="text-xs text-emerald-400/80">BUY AT</div>
+                                    <div class="text-2xl font-semibold tabular-nums text-emerald-400">${item.low.toLocaleString()}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-amber-400/80">SELL AT</div>
+                                    <div class="text-2xl font-semibold tabular-nums text-amber-400">${item.high.toLocaleString()}</div>
+                                </div>
+                            </div>
+
+                            <!-- Margin -->
+                            <div class="flex items-center justify-between bg-slate-900 border border-slate-700 rounded-2xl px-4 py-2 mb-3">
+                                <div>
+                                    <span class="text-xs text-slate-400">MARGIN</span>
+                                    <span class="ml-2 font-semibold text-lg tabular-nums">${item.margin.toLocaleString()}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="flip-badge ${item.marginPct >= 4 ? 'profit-positive' : 'bg-slate-700 text-slate-300'} px-3 py-0.5">
+                                        +${item.marginPct}%
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Volume & Demand -->
+                            <div class="flex items-center justify-between text-xs">
+                                <div class="flex items-center gap-x-1.5">
+                                    <i class="fa-solid fa-chart-bar text-emerald-400"></i>
+                                    <span class="font-mono">${item.volume5m.toLocaleString()}</span>
+                                    <span class="text-slate-400">trades</span>
+                                </div>
+                                
+                                <span class="flip-badge ${item.demandClass} px-2.5 py-px text-xs flex items-center gap-x-1">
+                                    <i class="fa-solid ${item.demandIcon} fa-fw"></i>
+                                    <span>${item.demandLabel}</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.insertAdjacentHTML('beforeend', cardHTML);
+            });
+        }
+
+        function renderAllItemsTable(items) {
+            const tbody = document.getElementById('all-items-tbody');
+            tbody.innerHTML = '';
+
+            if (items.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-slate-400">
+                            No matching items found. Try adjusting filters.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            items.forEach(item => {
+                const isWatched = watchlist.includes(item.id);
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-slate-800/60 transition-colors cursor-pointer';
+                row.onclick = () => showItemModal(item.id);
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-x-3">
+                            <div class="item-icon-placeholder w-8 h-8 text-sm">${item.name.substring(0,1)}</div>
+                            <div>
+                                <span class="font-medium">${item.name}</span>
+                                ${item.members ? '<span class="ml-2 text-[9px] px-1.5 py-px bg-emerald-900 text-emerald-300 rounded">M</span>' : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-4 text-right font-mono text-emerald-400">${item.low.toLocaleString()}</td>
+                    <td class="px-4 py-4 text-right font-mono text-amber-400">${item.high.toLocaleString()}</td>
+                    <td class="px-4 py-4 text-right">
+                        <div>
+                            <span class="font-semibold">${item.margin.toLocaleString()}</span>
+                            <span class="text-xs ml-1 text-emerald-400">(+${item.marginPct}%)</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-4 text-right font-mono text-emerald-300">${item.volume5m.toLocaleString()}</td>
+                    <td class="px-4 py-4 text-center">
+                        <span class="flip-badge ${item.demandClass} px-3 py-px text-xs inline-flex items-center gap-x-1">
+                            <i class="fa-solid ${item.demandIcon}"></i>
+                            <span class="hidden md:inline">${item.demandLabel}</span>
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center" onclick="event.stopImmediatePropagation()">
+                        <button onclick="toggleWatchlist(${item.id}, this); event.stopImmediatePropagation();" 
+                                class="text-lg ${isWatched ? 'text-rose-400' : 'text-slate-400 hover:text-rose-300'} transition-colors">
+                            <i class="fa-solid fa-heart"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function sortTable(column) {
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = column === 'name' ? 'asc' : 'desc';
+            }
+            
+            const filtered = getFilteredItems();
+            renderAllItemsTable(filtered);
+        }
+
+        function switchTab(tabIndex) {
+            // Hide all
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            // Deactivate all tabs
+            document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.remove('nav-active'));
+            
+            // Show selected
+            document.getElementById(`tab-content-${tabIndex}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabIndex}`).classList.add('nav-active');
+            
+            currentTab = tabIndex;
+            
+            const filtered = getFilteredItems();
+            renderCurrentTab(filtered);
+        }
+
+        function showItemModal(itemId) {
+            const item = allItems.find(i => i.id === itemId);
+            if (!item) return;
+            
+            currentModalItem = item;
+            
+            // Populate modal
+            document.getElementById('modal-name').textContent = item.name;
+            document.getElementById('modal-examine').textContent = item.examine || 'No examine text available.';
+            
+            const iconPlaceholder = document.getElementById('modal-icon');
+            iconPlaceholder.innerHTML = item.name.substring(0, 1).toUpperCase();
+            iconPlaceholder.style.background = item.members ? 
+                'linear-gradient(135deg, #166534, #4ade80)' : 
+                'linear-gradient(135deg, #334155, #475569)';
+            
+            // Members badge
+            const membersBadge = document.getElementById('modal-members-badge');
+            if (item.members) {
+                membersBadge.classList.remove('hidden');
+            } else {
+                membersBadge.classList.add('hidden');
+            }
+            
+            // Prices
+            document.getElementById('modal-low').innerHTML = `${item.low.toLocaleString()} <span class="text-sm font-normal text-slate-400">gp</span>`;
+            document.getElementById('modal-high').innerHTML = `${item.high.toLocaleString()} <span class="text-sm font-normal text-slate-400">gp</span>`;
+            
+            const marginEl = document.getElementById('modal-margin');
+            marginEl.innerHTML = `${item.margin.toLocaleString()} <span class="text-sm font-normal text-emerald-300">gp</span>`;
+            
+            document.getElementById('modal-margin-pct').innerHTML = `+${item.marginPct}% potential profit`;
+            
+            // Volume bars
+            const totalVol = item.highPriceVolume + item.lowPriceVolume || 1;
+            const highPct = totalVol > 0 ? Math.round((item.highPriceVolume / totalVol) * 100) : 50;
+            const lowPct = 100 - highPct;
+            
+            document.getElementById('modal-high-vol').textContent = item.highPriceVolume.toLocaleString();
+            document.getElementById('modal-low-vol').textContent = item.lowPriceVolume.toLocaleString();
+            document.getElementById('modal-high-vol-bar').style.width = `${highPct}%`;
+            document.getElementById('modal-low-vol-bar').style.width = `${lowPct}%`;
+            
+            // Demand badge & insight
+            const badge = document.getElementById('modal-demand-badge');
+            badge.className = `flip-badge ${item.demandClass} px-4 py-1 flex items-center gap-x-2 w-fit`;
+            badge.innerHTML = `<i class="fa-solid ${item.demandIcon}"></i> <span>${item.demandLabel}</span>`;
+            
+            let insight = '';
+            if (item.demandLabel === 'Growing Demand') {
+                insight = 'More buyers are active at higher prices. This can signal upward price pressure or strong short-term demand.';
+            } else if (item.demandLabel === 'Selling Pressure') {
+                insight = 'More volume on the sell side. Prices may be under pressure or finding support.';
+            } else {
+                insight = 'Balanced trading activity. Good liquidity for entering and exiting positions.';
+            }
+            document.getElementById('modal-demand-insight').textContent = insight;
+            
+            // Other stats
+            document.getElementById('modal-limit').textContent = item.limit > 0 ? item.limit.toLocaleString() + ' per 4 hours' : 'Unknown';
+            document.getElementById('modal-high-alch').innerHTML = item.highalch > 0 ? 
+                `${item.highalch.toLocaleString()} gp` : 'N/A';
+            
+            // Watchlist button state
+            updateModalWatchlistButton();
+            
+            // Show modal
+            document.getElementById('item-modal').classList.remove('hidden');
+            document.getElementById('item-modal').classList.add('flex');
+        }
+
+        function updateModalWatchlistButton() {
+            if (!currentModalItem) return;
+            
+            const btn = document.getElementById('modal-watchlist-btn');
+            const text = document.getElementById('modal-watchlist-text');
+            const isWatched = watchlist.includes(currentModalItem.id);
+            
+            if (isWatched) {
+                btn.classList.add('!bg-rose-900/30', '!border-rose-700');
+                btn.classList.remove('bg-slate-700', 'hover:bg-slate-600');
+                text.innerHTML = 'Remove from Watchlist';
+            } else {
+                btn.classList.remove('!bg-rose-900/30', '!border-rose-700');
+                btn.classList.add('bg-slate-700', 'hover:bg-slate-600');
+                text.innerHTML = 'Add to Watchlist';
+            }
+        }
+
+        function toggleWatchlistFromModal() {
+            if (!currentModalItem) return;
+            toggleWatchlist(currentModalItem.id);
+            updateModalWatchlistButton();
+            // Re-render current view to update heart icons
+            const filtered = getFilteredItems();
+            renderCurrentTab(filtered);
+        }
+
+        function toggleWatchlist(itemId, element = null) {
+            const index = watchlist.indexOf(itemId);
+            
+            if (index > -1) {
+                watchlist.splice(index, 1);
+                if (element) element.classList.remove('text-rose-400');
+                if (element) element.classList.add('text-slate-500', 'hover:text-rose-300');
+            } else {
+                watchlist.push(itemId);
+                if (element) element.classList.add('text-rose-400');
+                if (element) element.classList.remove('text-slate-500', 'hover:text-rose-300');
+            }
+            
+            localStorage.setItem('osrs_watchlist', JSON.stringify(watchlist));
+            updateWatchlistCount();
+            
+            // If on all items table, re-render it
+            if (currentTab === 3) {
+                const filtered = getFilteredItems();
+                renderAllItemsTable(filtered);
+            }
+        }
+
+        function showWatchlist() {
+            if (watchlist.length === 0) {
+                alert("Your watchlist is empty. Add items by clicking the heart icon on any card or row.");
+                return;
+            }
+            
+            const watchedItems = allItems.filter(i => watchlist.includes(i.id));
+            
+            // Switch to a nice modal list or reuse the grid idea
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="bg-slate-800 border border-slate-700 rounded-3xl max-w-5xl w-full max-h-[85vh] flex flex-col">
+                    <div class="px-8 pt-6 pb-4 border-b border-slate-700 flex justify-between items-center">
+                        <div class="flex items-center gap-x-3">
+                            <i class="fa-solid fa-heart text-rose-400 text-2xl"></i>
+                            <div>
+                                <span class="font-display text-2xl font-semibold">Your Watchlist</span>
+                                <span class="ml-3 text-xs px-3 py-1 bg-rose-900/30 text-rose-300 rounded-full">${watchedItems.length} items</span>
+                            </div>
+                        </div>
+                        <button class="text-slate-400 hover:text-white text-3xl leading-none" onclick="this.closest('.fixed').remove()">&times;</button>
+                    </div>
+                    
+                    <div class="p-8 flex-1 overflow-auto">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="watchlist-grid">
+                            <!-- populated below -->
+                        </div>
+                    </div>
+                    
+                    <div class="px-8 py-5 border-t border-slate-700 bg-slate-900 text-xs text-slate-400 flex justify-between items-center">
+                        <span>Click any item to view full details and trends.</span>
+                        <button onclick="this.closest('.fixed').remove()" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 rounded-2xl text-xs font-medium">CLOSE</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            const grid = modal.querySelector('#watchlist-grid');
+            
+            watchedItems.forEach(item => {
+                const cardHTML = `
+                    <div class="item-card rounded-3xl p-5 cursor-pointer" onclick="document.querySelector('.fixed').remove(); showItemModal(${item.id})">
+                        <div class="flex justify-between mb-4">
+                            <div class="flex items-center gap-x-3">
+                                <div class="item-icon-placeholder w-10 h-10 text-lg">${item.name.substring(0,1)}</div>
+                                <div class="font-semibold">${item.name}</div>
+                            </div>
+                            <button onclick="event.stopImmediatePropagation(); removeFromWatchlist(${item.id}, this.closest('.item-card'))" class="text-rose-400 hover:text-rose-300">
+                                <i class="fa-solid fa-heart"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex justify-between text-sm mb-3">
+                            <div><span class="text-emerald-400">Buy:</span> <span class="font-mono">${item.low.toLocaleString()}</span></div>
+                            <div><span class="text-amber-400">Sell:</span> <span class="font-mono">${item.high.toLocaleString()}</span></div>
+                        </div>
+                        
+                        <div class="text-xs flex justify-between items-center">
+                            <span class="font-medium text-emerald-400">+${item.marginPct}% margin</span>
+                            <span class="text-emerald-300">${item.volume5m.toLocaleString()} trades (5m)</span>
+                        </div>
+                    </div>
+                `;
+                grid.insertAdjacentHTML('beforeend', cardHTML);
+            });
+        }
+        
+        function removeFromWatchlist(itemId, cardElement) {
+            const idx = watchlist.indexOf(itemId);
+            if (idx > -1) watchlist.splice(idx, 1);
+            localStorage.setItem('osrs_watchlist', JSON.stringify(watchlist));
+            updateWatchlistCount();
+            cardElement.remove();
+            
+            // If empty now, close modal
+            if (watchlist.length === 0) {
+                cardElement.closest('.fixed').remove();
+            }
+            
+            // Refresh main view hearts
+            const filtered = getFilteredItems();
+            renderCurrentTab(filtered);
+        }
+
+        function hideModal() {
+            const modal = document.getElementById('item-modal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            currentModalItem = null;
+        }
+
+        async function refreshAllData() {
+            await loadAllData();
+            // After refresh, re-apply current filters and tab
+            const filtered = getFilteredItems();
+            renderCurrentTab(filtered);
+        }
+
+        // Keyboard shortcuts
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                if (e.key === '/' && document.activeElement.tagName === 'BODY') {
+                    e.preventDefault();
+                    document.getElementById('search-input').focus();
+                }
+                
+                if (e.key.toLowerCase() === 'r' && (e.metaKey || e.ctrlKey)) {
+                    e.preventDefault();
+                    refreshAllData();
+                }
+            });
+            
+            // Placeholder hint
+            const searchInput = document.getElementById('search-input');
+            searchInput.placeholder = "Search items... (press / to focus)";
+        }
+
+        // Initialize everything
+        async function initializeApp() {
+            initTailwind();
+            setupKeyboardShortcuts();
+            updateWatchlistCount();
+            
+            // Initial data load
+            await loadAllData();
+            
+            // Show recommended tab by default
+            document.getElementById('tab-0').classList.add('nav-active');
+            
+            // Bonus: show a tip toast once
+            setTimeout(() => {
+                const tip = document.createElement('div');
+                tip.className = 'fixed bottom-6 right-6 bg-slate-800 border border-slate-600 text-xs px-4 py-3 rounded-2xl shadow-xl max-w-xs z-50 flex items-start gap-x-3';
+                tip.innerHTML = `
+                    <div class="flex-1">
+                        <span class="font-medium text-amber-400">Pro tip:</span> 
+                        <span class="text-slate-300">High volume + good margin = easy flips. Check timestamps in details for how fresh the data is.</span>
+                    </div>
+                    <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-white">×</button>
+                `;
+                document.body.appendChild(tip);
+                
+                setTimeout(() => {
+                    if (tip.parentElement) tip.parentElement.removeChild(tip);
+                }, 6500);
+            }, 4200);
+            
+            // Easter egg: console message
+            console.log('%c[RunePulse] OSRS Investing App initialized. Data source: prices.runescape.wiki', 'color:#64748b');
+        }
+
+        // Boot the app
+        window.onload = initializeApp;
+    </script>
+</body>
+</html>
