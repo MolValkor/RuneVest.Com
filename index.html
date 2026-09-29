@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RunePulse • OSRS Investing</title>
-<meta name="description" content="Live Old School RuneScape Grand Exchange prices with a liquidity filter, after-tax margins, 24h/7d movers, set/decant/herblore arbitrage and news mentions. Data from the OSRS Wiki real-time prices API.">
+<meta name="description" content="Live Old School RuneScape Grand Exchange prices with a liquidity filter, after-tax margins, 24h/7d movers, set/decant/herblore arbitrage, crafting and enchanting profits, and news mentions. Data from the OSRS Wiki real-time prices API.">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#0f172a">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23f59e0b'/%3E%3Cpath d='M6 22l6-7 5 4 9-11' stroke='%230f172a' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
@@ -124,6 +124,17 @@ footer{border-top:1px solid var(--line);margin-top:30px;padding:18px 0 40px;colo
 footer p{margin:6px 0}
 details summary{cursor:pointer;color:var(--gold2)}
 .err{background:#450a0a;border:1px solid #991b1b;color:#fecaca;border-radius:12px;padding:10px 14px;margin:10px 0}
+/* crafting */
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 11px;cursor:pointer;font-size:12px;font-weight:600;color:var(--mute)}
+.chip[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:#111827}
+.chip .cnt{font-weight:500;opacity:.75;margin-left:3px}
+.staffnote{font-size:12px;color:var(--mute);margin:0 0 8px}
+.free{text-decoration:line-through;color:var(--dim)}
+.cr-legs{font-size:11px;color:var(--mute);white-space:normal;min-width:240px;max-width:380px}
+.nfa{font-size:11px;font-weight:700;color:#fdba74;border:1px solid #92400e;border-radius:6px;padding:1px 6px;white-space:nowrap}
+.jump{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:13px}
+.jump a{border:1px solid var(--line);border-radius:999px;padding:3px 10px;text-decoration:none;background:var(--panel)}
 @media (max-width:1100px){.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.filters{grid-template-columns:1fr}}
 @media (max-width:640px){
  .wrap{padding:0 12px}.hero h1{font-size:25px}
@@ -135,6 +146,8 @@ details summary{cursor:pointer;color:var(--gold2)}
  td,th{padding:7px 8px}
  td.name{min-width:130px;max-width:170px}
  .legs{min-width:170px}
+ .cr-legs{min-width:190px}
+ .controls .field{min-width:0;flex:1 1 140px}
  .top .wrap{padding-top:8px;padding-bottom:8px;gap:8px}
  .logo{width:30px;height:30px}
 }
@@ -160,6 +173,7 @@ details summary{cursor:pointer;color:var(--gold2)}
   <section class="hero">
     <h1>Grand Exchange Market Intel</h1>
     <p>Live OSRS prices with a liquidity filter, after-tax margins, 24h/7d movers, verified conversion routes and news mentions. Data: <a href="https://oldschool.runescape.wiki/w/RuneScape:Real-time_Prices" target="_blank" rel="noopener">OSRS Wiki real-time prices</a> (RuneLite). Nothing here is financial advice.</p>
+    <nav class="jump" aria-label="Sections"><a href="#mk-h">Market</a><a href="#trending">Trending</a><a href="#crafting">Crafting Profits</a></nav>
   </section>
   <div id="load-error" class="err" hidden></div>
 
@@ -268,9 +282,29 @@ details summary{cursor:pointer;color:var(--gold2)}
     </div>
   </section>
 
+  <section class="sec" id="crafting" aria-labelledby="cr-h">
+    <div class="sec-head"><div><h2 id="cr-h">Crafting Profits <span class="nfa">Not financial advice</span></h2><p class="note">Buy the inputs on the GE, process them (enchant, fletch, cook, smelt, smith, craft, alch, clean herbs…), sell the output. Recipes are generated from the OSRS Wiki's recipe data by <code>tools/build_recipes.py</code>; prices, volumes and buy limits are live from the wiki price API.</p></div></div>
+    <div class="controls">
+      <div class="field" style="min-width:200px"><label for="cr-search">Search</label><input id="cr-search" type="search" placeholder="e.g. dueling, dart, shark, bar" autocomplete="off"></div>
+      <div class="field"><label for="cr-members">Members</label><select id="cr-members"><option value="all">All</option><option value="m">Members</option><option value="f">F2P only</option></select></div>
+      <div class="field"><label for="cr-sort">Sort by</label><select id="cr-sort"><option value="p4h">Profit / 4h (buy-limit cap)</option><option value="profit">Profit / action</option><option value="roi">ROI</option></select></div>
+      <div class="field" style="min-width:210px"><label for="cr-staff">Elemental staff equipped</label><select id="cr-staff"></select></div>
+      <div class="seg" role="group" aria-label="Crafting price assumption"><button data-cpm="offer" aria-pressed="true" title="Buy inputs at latest low, sell output at latest high">Offers</button><button data-cpm="instant" aria-pressed="false" title="Buy inputs at latest high, sell output at latest low">Instant</button></div>
+      <label class="chk"><input type="checkbox" id="cr-profit" checked> Profitable only</label>
+    </div>
+    <div class="chips" id="cr-chips" role="group" aria-label="Skill filter"></div>
+    <p class="staffnote" id="cr-staff-note">&nbsp;</p>
+    <p class="note" id="cr-note" style="margin-bottom:10px">&nbsp;</p>
+    <div class="tbl-wrap"><table id="tbl-cr"><thead><tr>
+      <th class="sticky">Route</th><th class="n">Profit / action</th><th class="n">ROI</th><th class="n">Profit / 4h</th><th class="n">Actions / 4h</th><th class="n">Input cost</th><th class="n">Sell value</th><th class="n">Tax</th><th class="n">XP / action</th><th class="n">Age</th><th>Buy → make → sell</th>
+    </tr></thead><tbody></tbody></table></div>
+    <div class="more"><button class="btn sm" id="cr-more" type="button" hidden>Show more</button></div>
+    <p class="note" id="cr-foot">&nbsp;</p>
+  </section>
+
   <footer>
     <p><b>GE tax used here:</b> 2% of the sale price per item, rounded down (so items sold for under 50 gp pay nothing), capped at 5,000,000 gp per item. Exempt items (<span id="tax-count">—</span>, e.g. Old school bond, Energy potions, low-level food, teleport tablets, basic tools) pay no tax. Source: <a href="https://oldschool.runescape.wiki/w/Grand_Exchange#Convenience_fee_and_item_sink" target="_blank" rel="noopener">OSRS Wiki, Grand Exchange: convenience fee</a> and <a href="https://oldschool.runescape.wiki/w/Category:Items_exempt_from_Grand_Exchange_tax" target="_blank" rel="noopener">Items exempt from Grand Exchange tax</a>, checked <span id="routes-built">—</span> (UTC date).</p>
-    <p><b>Data:</b> prices, volumes and buy limits come from the <a href="https://oldschool.runescape.wiki/w/RuneScape:Real-time_Prices" target="_blank" rel="noopener">OSRS Wiki real-time prices API</a> (/latest, /5m, /24h, /timeseries, /mapping), fetched directly by your browser and cached as the API's headers allow. Routes are parsed from wiki pages by <code>tools/build_routes.py</code>; news mentions come from a dated snapshot of the official feed (<code>tools/fetch_news.py</code>).</p>
+    <p><b>Data:</b> prices, volumes and buy limits come from the <a href="https://oldschool.runescape.wiki/w/RuneScape:Real-time_Prices" target="_blank" rel="noopener">OSRS Wiki real-time prices API</a> (/latest, /5m, /24h, /timeseries, /mapping), fetched directly by your browser and cached as the API's headers allow. Routes are parsed from wiki pages by <code>tools/build_routes.py</code>, Crafting Profits recipes by <code>tools/build_recipes.py</code>; news mentions come from a dated snapshot of the official feed (<code>tools/fetch_news.py</code>).</p>
     <p>No trackers, no analytics, no cookies. Your filters and watchlist stay in this browser (localStorage). Not affiliated with Jagex or the OSRS Wiki. Always check prices in-game before trading.</p>
   </footer>
 </main>
@@ -285,6 +319,7 @@ details summary{cursor:pointer;color:var(--gold2)}
 
 <script src="data/routes.js"></script>
 <script src="data/news.js"></script>
+<script src="data/recipes.js"></script>
 <script>
 'use strict';
 /* ==========================================================================
@@ -336,6 +371,7 @@ function short(n) {
   const a = Math.abs(n);
   if (a >= 1e9) return (n / 1e9).toFixed(2).replace(/\.?0+$/, '') + 'b';
   if (a >= 1e7) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'm';
+  if (a >= 1e6) return (n / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'm';
   if (a >= 1e5) return (n / 1e3).toFixed(0) + 'k';
   return fmt(n);
 }
@@ -487,6 +523,7 @@ function renderAll() {
   renderMarket();
   renderMovers();
   renderArb();
+  renderCraft();
   renderNews();
 }
 
@@ -641,6 +678,133 @@ function renderArb() {
   const more = $('#arb-more'); more.hidden = rows.length <= arbShown; more.textContent = 'Show more (' + fmt(rows.length - arbShown) + ' left)';
 }
 
+/* ---------- Crafting Profits ----------
+   Recipes: data/recipes.js (window.RV_RECIPES), generated by tools/build_recipes.py from the
+   OSRS Wiki's Bucket:Recipe data (the data behind every {{Recipe}} infobox) plus spell pages
+   for rune costs and the Staves page for which runes each elemental staff provides.
+   High Alchemy routes are built here from /mapping highalch values + the wiki's
+   High Level Alchemy rune cost (stored in RV_RECIPES.spells). */
+const RCP = window.RV_RECIPES || { recipes: [], staves: [], spells: {}, counts: {}, skipped: {} };
+const CR_CATS = ['Enchanting', 'Fletching', 'Cooking', 'Smelting', 'Smithing', 'Crafting', 'Herblore', 'Superheat', 'High Alchemy', 'Magic (other spells)'];
+const CR_LABEL = { 'Magic (other spells)': 'Other spells' };
+let crCat = 'all', crMode = 'offer', crShown = 50, CR_LIST = null, crStaff = localStorage.getItem('rv_staff') || '';
+function staffGroups() { // group staves by the set of runes they provide
+  const g = new Map();
+  for (const s of RCP.staves) { const k = [...s.runes].sort((a, b) => a - b).join(','); if (!g.has(k)) g.set(k, []); g.get(k).push(s.name); }
+  return g;
+}
+function staffFree() { return new Set(crStaff ? crStaff.split(',').map(Number) : []); }
+function buildCraft() {
+  const R = [];
+  const wiki = p => 'https://oldschool.runescape.wiki/w/' + encodeURIComponent(p.replace(/ /g, '_'));
+  for (const r of RCP.recipes) {
+    R.push({ cat: r.cat, page: r.page, src: wiki(r.page), variant: r.variant || '', tools: r.tools || '', fac: r.facilities || '', verified: r.verified || '',
+      skills: r.skills, members: r.members, ins: r.in.map(([id, qty]) => ({ id, qty })), outs: r.out.map(([id, qty]) => ({ id, qty })) });
+  }
+  const hla = RCP.spells && RCP.spells['High Level Alchemy'];
+  // Excluded: items in the wiki's "Items that cannot be alchemised" category, and GE item sets
+  // (the wiki does not say whether a set can be alched, so we don't assume it).
+  const noAlch = new Set((RCP.noAlch || []).concat(ROUTES.sets.map(x => x.set)));
+  if (hla) for (const m of D.meta.values()) {
+    if (!m.highalch || !D.latest[m.id] || noAlch.has(m.id)) continue;
+    R.push({ cat: 'High Alchemy', page: m.name, src: wiki('High Level Alchemy'), variant: 'High Level Alchemy', tools: '', fac: '', verified: '',
+      skills: [['Magic', hla.level, hla.xp]], members: !!m.members || hla.members, alch: m.highalch,
+      ins: [{ id: m.id, qty: 1 }].concat(hla.runes.map(x => ({ id: x.id, qty: x.qty }))), outs: [] });
+  }
+  return R;
+}
+function priceCraft(r, free) {
+  const buyP = i => crMode === 'offer' ? i.low : i.high, sellP = i => crMode === 'offer' ? i.high : i.low;
+  let cost = 0, gross = 0, tax = 0, ageMin = 0, minLegVol = Infinity, maxLegSpread = 0, actions = Infinity, members = r.members;
+  // Spread % is only checked on legs priced at or above the min-price setting: for 4-6 gp runes,
+  // feathers, vials etc. a single 1 gp tick is a 20%+ "spread", the same artefact min price guards against.
+  const leg = i => { ageMin = Math.max(ageMin, i.ageMin ?? Infinity); minLegVol = Math.min(minLegVol, i.dayVol); if (Math.max(i.low || 0, i.high || 0) >= S.minPrice) maxLegSpread = Math.max(maxLegSpread, i.spreadPct == null ? Infinity : Math.abs(i.spreadPct)); if (i.members) members = true; };
+  const ins = [];
+  for (const l of r.ins) {
+    if (l.id === 0) { cost += l.qty; ins.push({ ...l, unit: 1 }); continue; } // coins (e.g. Plank Make fee)
+    if (free.has(l.id)) { ins.push({ ...l, unit: 0, free: true }); continue; }
+    const i = D.byId.get(l.id); if (!i || !buyP(i)) return null;
+    cost += buyP(i) * l.qty; leg(i); ins.push({ ...l, unit: buyP(i) });
+    if (i.limit) actions = Math.min(actions, Math.floor(i.limit / l.qty));
+  }
+  let outUnit = null;
+  if (r.alch) { gross = r.alch; }
+  else for (const l of r.outs) {
+    const i = D.byId.get(l.id); if (!i || !sellP(i)) return null;
+    outUnit = sellP(i); gross += outUnit * l.qty; tax += geTax(outUnit, i.id) * l.qty; leg(i);
+  }
+  const profit = gross - tax - cost;
+  actions = isFinite(actions) ? actions : null;
+  return { ...r, ins, members, cost, gross, tax, profit, outUnit, roi: cost ? profit / cost * 100 : null, ageMin, minLegVol, maxLegSpread, actions, p4h: actions != null ? profit * actions : null };
+}
+function crPass(x) {
+  return x.minLegVol >= S.minVol && x.ageMin <= S.maxAge && x.maxLegSpread <= S.maxSpread && x.gross >= S.minPrice;
+}
+function renderCraft() {
+  if (!D.items.length) return;
+  CR_LIST = CR_LIST || buildCraft();
+  const free = staffFree();
+  const nm = id => (D.meta.get(id) || {}).name || ('Item ' + id);
+  const q = $('#cr-search').value.trim().toLowerCase(), mem = $('#cr-members').value;
+  const priced = CR_LIST.map(r => priceCraft(r, free)).filter(Boolean);
+  const liquidR = priced.filter(crPass);
+  const base = liquidR.filter(x => (mem === 'all' || (mem === 'm') === x.members) &&
+    (!q || (x.page + ' ' + x.variant + ' ' + x.ins.map(l => l.id ? nm(l.id) : 'coins').join(' ') + ' ' + x.outs.map(l => nm(l.id)).join(' ')).toLowerCase().includes(q)));
+  const onlyProf = $('#cr-profit').checked;
+  const counted = onlyProf ? base.filter(x => x.profit > 0) : base;
+  const byCat = {}; counted.forEach(x => byCat[x.cat] = (byCat[x.cat] || 0) + 1);
+  $('#cr-chips').innerHTML = `<button class="chip" data-crcat="all" aria-pressed="${crCat === 'all'}">All<span class="cnt">${fmt(counted.length)}</span></button>` +
+    CR_CATS.map(c => `<button class="chip" data-crcat="${esc(c)}" aria-pressed="${crCat === c}">${esc(CR_LABEL[c] || c)}<span class="cnt">${fmt(byCat[c] || 0)}</span></button>`).join('');
+  let rows = counted.filter(x => crCat === 'all' || x.cat === crCat);
+  const k = $('#cr-sort').value;
+  rows.sort((a, b) => ((b[k] ?? -Infinity) - (a[k] ?? -Infinity)) || (b.profit - a.profit));
+  const staffNames = crStaff ? (staffGroups().get(crStaff) || []) : [];
+  $('#cr-staff-note').innerHTML = crStaff ? `Staff covers: <b>${[...free].map(id => esc(nm(id))).join(' + ')}</b> (${esc(staffNames.join(', '))}). Those runes cost 0 and are left out of the liquidity check; the staff itself is not bought or counted.`
+    : 'No staff: every rune is bought on the GE. Pick an elemental staff above to make its runes free.';
+  const alchN = CR_LIST.filter(r => r.cat === 'High Alchemy').length;
+  $('#cr-note').innerHTML = `${fmt(RCP.recipes.length)} wiki recipes (built ${esc(RCP.builtAt || '?')}) + ${fmt(alchN)} High Alchemy routes from /mapping; ${fmt(priced.length)} have live prices on every leg, <b>${fmt(liquidR.length)}</b> pass your liquidity filter on every GE leg (≥ ${fmt(S.minVol)} traded/day and prices ≤ ${fmt(S.maxAge)} min old on every leg; spread ≤ ${S.maxSpread}% on every leg priced ≥ ${fmt(S.minPrice)} gp, because a 1 gp tick on a 5 gp rune is already a 20% spread; sell value per action ≥ ${fmt(S.minPrice)} gp). Prices: ${crMode === 'offer' ? '<b>offers</b> (buy inputs at latest low, sell at latest high)' : '<b>instant</b> (buy inputs at latest high, sell at latest low)'}. Tax: 2% of the output's sale price (exempt list applied). Actions / 4h = the tightest GE buy limit among the inputs you buy (it ignores how long the actions take).`;
+  const tagCat = c => `<span class="tag ${c === 'High Alchemy' || c === 'Enchanting' || c === 'Superheat' || c === 'Magic (other spells)' ? 'blue' : 'gray'}">${esc((CR_LABEL[c] || c).toUpperCase())}</span>`;
+  const qty = n => (Math.round(n * 1000) / 1000).toString();
+  const legs = x => {
+    const inn = x.ins.map(l => {
+      const name = l.id === 0 ? 'coins' : esc(nm(l.id));
+      if (l.free) return `<span class="free" title="Provided by your staff">${qty(l.qty)}× ${name}</span> <span class="tag blue">STAFF</span>`;
+      return `${qty(l.qty)}× ${name}${l.id ? ' <span class="dim">@' + fmt(l.unit) + '</span>' : ''}`;
+    }).join(', ');
+    const out = x.alch ? `<span class="gold">${fmt(x.alch)} coins</span> (high alch value, no GE sale, no tax)` : x.outs.map(l => `${qty(l.qty)}× ${esc(nm(l.id))} <span class="dim">@${fmt(x.outUnit)}</span>`).join(', ');
+    return `<span class="up">Buy</span> ${inn} → <span class="gold">${x.alch ? 'get' : 'sell'}</span> ${out}`;
+  };
+  const skillTxt = x => x.skills.map(s => esc(s[0]) + (s[1] != null ? ' ' + s[1] : '')).join(' + ');
+  const xpTxt = x => x.skills.filter(s => s[2] != null).map(s => `${s[2]} ${esc(s[0])}`).join('<br>') || '<span class="dim">—</span>';
+  const title = x => x.alch ? esc(x.page) + ' → alch' : x.outs.map(l => (l.qty !== 1 ? qty(l.qty) + '× ' : '') + esc(nm(l.id))).join(' + ');
+  $('#tbl-cr tbody').innerHTML = rows.slice(0, crShown).map(x => `<tr data-cr="${esc(x.page)}">
+    <td class="name sticky">${tagCat(x.cat)} ${x.members ? '<span class="tag">M</span>' : '<span class="tag gray">F2P</span>'}${x.cat === 'Cooking' ? ' <span class="tag warn" title="Burn chance depends on level and gear and is not modelled">NO BURNS ASSUMED</span>' : ''}
+      <div><a href="${esc(x.src)}" target="_blank" rel="noopener" style="color:inherit;font-weight:600;text-decoration:none">${title(x)}</a></div>
+      <div class="dim" style="font-size:11px">${skillTxt(x)}${x.variant ? ' · ' + esc(x.variant) : ''}${x.tools ? ' · tools: ' + esc(x.tools.replace(/\|/g, ', ')) : ''}${x.fac ? ' · at: ' + esc(x.fac.split('|')[0]) : ''}${x.verified ? ' · runes checked vs ' + esc(x.verified) : ''}</div></td>
+    <td class="n ${cls(x.profit)}"><b>${fmt(x.profit)}</b></td><td class="n ${cls(x.roi)}">${pct(x.roi, 1)}</td>
+    <td class="n ${cls(x.p4h)}">${x.p4h == null ? '?' : short(x.p4h)}</td><td class="n">${x.actions == null ? '?' : fmt(x.actions)}</td>
+    <td class="n">${fmt(x.cost)}</td><td class="n">${fmt(x.gross)}</td><td class="n">${fmt(x.tax)}</td><td class="n">${xpTxt(x)}</td><td class="n">${ago(x.ageMin)}</td>
+    <td class="cr-legs">${legs(x)}</td></tr>`).join('') || '<tr><td colspan="11" class="empty">No routes match. Try another skill, Instant/Offers, a staff, untick "Profitable only", or loosen the liquidity filter.</td></tr>';
+  const more = $('#cr-more'); more.hidden = rows.length <= crShown; more.textContent = 'Show more (' + fmt(rows.length - crShown) + ' left)';
+  const sk = RCP.skipped || {};
+  $('#cr-foot').innerHTML = `Skipped when building: ${Object.entries(sk).map(([k, v]) => fmt(v) + ' ' + esc(k)).join(', ')}. Cooking assumes no burns; only the first output of a recipe is counted (by-products such as returned containers are ignored); quantities are the wiki's per-action values (e.g. a spool of thread is listed as 1 per item). High Alchemy uses /mapping alch values and skips the wiki's <a href="https://oldschool.runescape.wiki/w/Category:Items_that_cannot_be_alchemised" target="_blank" rel="noopener">cannot-be-alchemised</a> items and GE item sets. Sources: <a href="${esc((RCP.sources || {}).recipes ? 'https://oldschool.runescape.wiki/w/Bucket:Recipe' : '#')}" target="_blank" rel="noopener">wiki recipe data</a>, <a href="https://oldschool.runescape.wiki/w/Enchantment_spells" target="_blank" rel="noopener">enchant spells</a>, <a href="https://oldschool.runescape.wiki/w/Staves" target="_blank" rel="noopener">staves</a>. Check prices and requirements in-game. Not financial advice.`;
+}
+function initCraft() {
+  const sel = $('#cr-staff');
+  const nm = id => (D.meta.get(id) || {}).name || ({ 554: 'Fire rune', 555: 'Water rune', 556: 'Air rune', 557: 'Earth rune' }[id] || 'Item ' + id);
+  const g = staffGroups();
+  sel.innerHTML = '<option value="">None</option>' + [...g.entries()].map(([k, names]) => `<option value="${k}">${k.split(',').map(id => nm(+id).replace(' rune', '')).join(' + ')} (${esc(names.join(', '))})</option>`).join('');
+  if (!g.has(crStaff)) crStaff = '';
+  sel.value = crStaff;
+  sel.addEventListener('change', () => { crStaff = sel.value; localStorage.setItem('rv_staff', crStaff); renderCraft(); });
+  let deb;
+  $('#cr-search').addEventListener('input', () => { clearTimeout(deb); deb = setTimeout(() => { crShown = 50; renderCraft(); }, 200); });
+  ['#cr-members', '#cr-sort', '#cr-profit'].forEach(s => $(s).addEventListener('change', () => { crShown = 50; renderCraft(); }));
+  $('#cr-more').addEventListener('click', () => { crShown += 100; renderCraft(); });
+  $('#cr-chips').addEventListener('click', e => { const b = e.target.closest('[data-crcat]'); if (!b) return; crCat = b.dataset.crcat; crShown = 50; renderCraft(); });
+  bindSeg('#crafting .seg', 'cpm', v => { crMode = v; renderCraft(); });
+}
+
 /* ---------- Update Watch (news snapshot) ---------- */
 let newsShowAll = new Set();
 function renderNews() {
@@ -767,6 +931,7 @@ function init() {
   });
   $('#btn-refresh').addEventListener('click', loadAll);
   document.addEventListener('keydown', e => { if (e.key === '/' && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); $('#f-search').focus(); } });
+  initCraft();
   renderNews();
   loadAll();
 }
