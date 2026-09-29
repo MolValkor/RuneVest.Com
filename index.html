@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RunePulse • OSRS Investing</title>
+<meta name="description" content="Live Old School RuneScape Grand Exchange prices with a liquidity filter, after-tax margins, 24h/7d movers, set/decant/herblore arbitrage and news mentions. Data from the OSRS Wiki real-time prices API.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0f172a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23f59e0b'/%3E%3Cpath d='M6 22l6-7 5 4 9-11' stroke='%230f172a' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#0f172a;--panel:#1e293b;--panel2:#162032;--line:#334155;--line2:#475569;--txt:#e2e8f0;--mute:#94a3b8;--dim:#64748b;--gold:#f59e0b;--gold2:#fbbf24;--up:#22c55e;--down:#f87171;--blue:#60a5fa;--r:14px}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif}
+a{color:var(--gold2)}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1400px;margin:0 auto;padding:0 20px}
+.num,td.n,.mono{font-variant-numeric:tabular-nums}
+.up{color:var(--up)}.down{color:var(--down)}.mute{color:var(--mute)}.dim{color:var(--dim)}.gold{color:var(--gold2)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* header */
+.top{position:sticky;top:0;z-index:40;background:rgba(15,23,42,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:10px;padding-bottom:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--gold);display:grid;place-items:center}
+.brand b{font-size:22px;letter-spacing:-.5px}.brand small{color:var(--gold);font-weight:700;letter-spacing:2px;font-size:11px;margin-left:4px}
+.status{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--mute)}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 10px;font-size:12px;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}.dot.ok{background:var(--up)}.dot.err{background:var(--down)}.dot.load{background:var(--gold);animation:p 1s infinite}
+@keyframes p{50%{opacity:.3}}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:7px 12px;cursor:pointer;font-weight:600;font-size:13px}
+.btn:hover{border-color:var(--line2);background:#243349}.btn:disabled{opacity:.5;cursor:default}
+.btn.sm{padding:4px 9px;font-size:12px;border-radius:8px}
+/* hero */
+.hero{padding:22px 0 8px}
+.hero h1{margin:0;font-size:32px;letter-spacing:-.8px}
+.hero p{margin:4px 0 0;color:var(--mute);max-width:900px}
+/* cards & panels */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:14px 0}
+.metric .k{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);font-weight:600}
+.metric .v{font-size:24px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.metric .s{font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+h2{font-size:22px;margin:0;letter-spacing:-.4px}
+h3{margin:0;font-size:16px}
+.sec{margin:22px 0}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.note{font-size:12px;color:var(--mute);margin:4px 0 0}
+/* filters */
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px}
+.fgroup{border:1px solid var(--line);border-radius:12px;padding:10px 12px 12px;margin:0}
+.fgroup legend{padding:0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold2);font-weight:700}
+.fgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.field label{display:block;font-size:11px;color:var(--mute);font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.field input,.field select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+.field input:focus,.field select:focus{outline:2px solid rgba(245,158,11,.5);border-color:var(--gold)}
+.field .hint{font-size:11px;color:var(--dim);margin-top:3px}
+.fsum{font-size:12px;color:var(--mute);margin-top:10px}
+/* tabs */
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:none;border:0;border-bottom:2px solid transparent;padding:9px 14px;cursor:pointer;font-weight:600;color:var(--mute);white-space:nowrap}
+.tab[aria-selected=true]{color:var(--txt);border-bottom-color:var(--gold)}
+.tab:hover{color:var(--txt)}
+.tab .cnt{font-size:11px;color:var(--dim);margin-left:4px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{background:var(--bg);border:0;padding:6px 11px;cursor:pointer;font-size:12px;font-weight:600;color:var(--mute)}
+.seg button[aria-pressed=true]{background:var(--gold);color:#111827}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.controls label.chk{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--mute)}
+.controls .field{min-width:130px}
+/* item cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;cursor:pointer;text-align:left;width:100%;display:block}
+.card:hover{border-color:var(--line2)}
+.card .nm{font-weight:700;font-size:15px;line-height:1.25;display:flex;gap:6px;align-items:flex-start;justify-content:space-between}
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;padding:1px 6px;border-radius:5px;background:#052e16;color:#4ade80;vertical-align:middle}
+.tag.warn{background:#451a03;color:#fdba74}.tag.gray{background:#334155;color:#cbd5e1}.tag.blue{background:#172554;color:#93c5fd}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-top:10px;font-size:12px}
+.kv div span{display:block;color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.kv b{font-variant-numeric:tabular-nums;font-size:14px}
+.profit{margin-top:10px;display:flex;justify-content:space-between;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.empty{padding:28px;text-align:center;color:var(--mute)}
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{position:sticky;top:0;background:#273449;color:var(--mute);text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:9px 10px;white-space:nowrap;font-weight:700}
+th.n,td.n{text-align:right}
+th button{all:unset;cursor:pointer}
+th button:focus-visible{outline:2px solid var(--gold)}
+td{padding:8px 10px;border-top:1px solid var(--line);white-space:nowrap;vertical-align:middle}
+tbody tr:hover{background:rgba(51,65,85,.35)}
+td.name{white-space:normal;min-width:170px}
+td.name button{all:unset;cursor:pointer;font-weight:600}
+td.name button:hover{color:var(--gold2)}
+td.sticky,th.sticky{position:sticky;left:0;background:var(--panel);z-index:1}
+th.sticky{background:#273449;z-index:2}
+tbody tr:hover td.sticky{background:#26344a}
+.post .tbl-wrap td.sticky{background:var(--panel2)}
+.post .tbl-wrap tbody tr:hover td.sticky{background:#1f2b3f}
+.legs{font-size:11px;color:var(--mute);white-space:normal;min-width:220px;max-width:360px}
+.more{display:flex;justify-content:center;padding:10px}
+svg.spark{display:block}
+/* banner */
+.banner{border:1px solid #92400e;background:#1c1206;color:#fde68a;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13px}
+.banner b{color:#fbbf24}
+.news{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+.post{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.post .meta{font-size:12px;color:var(--dim)}
+.post h3 a{color:var(--txt);text-decoration:none}.post h3 a:hover{color:var(--gold2)}
+.post .tbl-wrap{margin-top:10px;background:var(--panel2)}
+/* modal */
+dialog{border:1px solid var(--line);background:var(--panel);color:var(--txt);border-radius:18px;padding:0;width:min(760px,96vw);max-height:92vh}
+dialog::backdrop{background:rgba(2,6,23,.75)}
+.mhead{display:flex;justify-content:space-between;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line);align-items:flex-start}
+.mbody{padding:16px 18px;overflow:auto;max-height:calc(92vh - 140px)}
+.mgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.box{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px}
+.box .k{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);font-weight:700}
+.box .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.chart{margin-top:12px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px}
+footer{border-top:1px solid var(--line);margin-top:30px;padding:18px 0 40px;color:var(--mute);font-size:12px}
+footer p{margin:6px 0}
+details summary{cursor:pointer;color:var(--gold2)}
+.err{background:#450a0a;border:1px solid #991b1b;color:#fecaca;border-radius:12px;padding:10px 14px;margin:10px 0}
+@media (max-width:1100px){.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.filters{grid-template-columns:1fr}}
+@media (max-width:640px){
+ .wrap{padding:0 12px}.hero h1{font-size:25px}
+ .metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.metric .v{font-size:19px}
+ .fgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .brand b{font-size:19px}.status .pill.hide-sm{display:none}
+ .mgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .grid{grid-template-columns:1fr}
+ td,th{padding:7px 8px}
+ td.name{min-width:130px;max-width:170px}
+ .legs{min-width:170px}
+ .top .wrap{padding-top:8px;padding-bottom:8px;gap:8px}
+ .logo{width:30px;height:30px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="RunePulse home">
+      <span class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 32 32"><path d="M4 23l7-8 6 5 11-13" stroke="#0f172a" stroke-width="3.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span><b>RunePulse</b><small>OSRS</small></span>
+    </a>
+    <div class="status">
+      <span class="pill" id="st-pill"><span class="dot load" id="st-dot"></span><span id="st-text">Loading prices…</span></span>
+      <span class="pill hide-sm" id="st-times" title="When each dataset was fetched">—</span>
+      <button class="btn sm" id="btn-refresh" type="button">Refresh</button>
+      <button class="btn sm" id="btn-watch" type="button" aria-label="Show watchlist">★ <span id="watch-count">0</span></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>Grand Exchange Market Intel</h1>
+    <p>Live OSRS prices with a liquidity filter, after-tax margins, 24h/7d movers, verified conversion routes and news mentions. Data: <a href="https://oldschool.runescape.wiki/w/RuneScape:Real-time_Prices" target="_blank" rel="noopener">OSRS Wiki real-time prices</a> (RuneLite). Nothing here is financial advice.</p>
+  </section>
+  <div id="load-error" class="err" hidden></div>
+
+  <section class="metrics" aria-label="Key metrics">
+    <div class="panel metric"><div class="k">Items with prices</div><div class="v" id="m-items">—</div><div class="s" id="m-items-s">from /latest</div></div>
+    <div class="panel metric"><div class="k">Pass liquidity filter</div><div class="v" id="m-liquid">—</div><div class="s" id="m-liquid-s">&nbsp;</div></div>
+    <div class="panel metric"><div class="k">Median margin after tax</div><div class="v" id="m-median">—</div><div class="s">liquid items, buy low / sell high</div></div>
+    <div class="panel metric"><div class="k">Profitable after tax</div><div class="v" id="m-pos">—</div><div class="s" id="m-pos-s">&nbsp;</div></div>
+    <div class="panel metric"><div class="k">Best margin (liquid)</div><div class="v gold" id="m-best">—</div><div class="s" id="m-best-s">&nbsp;</div></div>
+    <div class="panel metric"><div class="k">Most traded (1 day)</div><div class="v" id="m-vol" style="font-size:17px">—</div><div class="s" id="m-vol-s">&nbsp;</div></div>
+  </section>
+
+  <section class="panel" aria-label="Filters">
+    <div class="filters">
+      <fieldset class="fgroup">
+        <legend>Liquidity filter</legend>
+        <div class="fgrid">
+          <div class="field"><label for="f-minvol">Min daily volume</label><input id="f-minvol" type="number" min="0" step="50" inputmode="numeric"><div class="hint">units traded, last full UTC day</div></div>
+          <div class="field"><label for="f-spread">Max spread %</label><input id="f-spread" type="number" min="0" step="0.5" inputmode="decimal"><div class="hint">|sell − buy| ÷ buy</div></div>
+          <div class="field"><label for="f-age">Max price age (min)</label><input id="f-age" type="number" min="1" step="5" inputmode="numeric"><div class="hint">older of the two last trades</div></div>
+          <div class="field"><label for="f-minprice">Min buy price (gp)</label><input id="f-minprice" type="number" min="0" step="50" inputmode="numeric"><div class="hint">avoids 1 gp tick artefacts</div></div>
+        </div>
+        <div class="fsum" id="f-summary">&nbsp;</div>
+        <button class="btn sm" id="f-reset" type="button" style="margin-top:8px">Reset to defaults</button>
+      </fieldset>
+      <fieldset class="fgroup">
+        <legend>Search</legend>
+        <div class="field"><label for="f-search">Item name</label><input id="f-search" type="search" placeholder="e.g. rune, whip, prayer… (press /)" autocomplete="off"></div>
+      </fieldset>
+      <fieldset class="fgroup">
+        <legend>Other</legend>
+        <div class="fgrid" style="grid-template-columns:1fr 1fr">
+          <div class="field"><label for="f-members">Members</label><select id="f-members"><option value="all">All</option><option value="m">Members</option><option value="f">F2P</option></select></div>
+          <div class="field"><label for="f-maxprice">Max buy price</label><select id="f-maxprice"><option value="0">Any</option><option value="10000">&lt; 10k</option><option value="100000">&lt; 100k</option><option value="1000000">&lt; 1m</option><option value="10000000">&lt; 10m</option></select></div>
+        </div>
+      </fieldset>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="mk-h">
+    <div class="sec-head"><div><h2 id="mk-h">Market</h2><p class="note">Margin = sell at the latest instant-buy price (high) − GE tax − buy at the latest instant-sell price (low). Assumes your offers fill at those prices; they may not.</p></div></div>
+    <div class="tabs" role="tablist" aria-label="Market views">
+      <button class="tab" role="tab" id="mt-flips" aria-controls="mp-flips" aria-selected="true">Best margins<span class="cnt" id="c-flips"></span></button>
+      <button class="tab" role="tab" id="mt-volume" aria-controls="mp-volume" aria-selected="false">Most traded</button>
+      <button class="tab" role="tab" id="mt-all" aria-controls="mp-all" aria-selected="false">All items<span class="cnt" id="c-all"></span></button>
+    </div>
+    <div id="mp-flips" role="tabpanel" aria-labelledby="mt-flips"><div class="grid" id="grid-flips"></div></div>
+    <div id="mp-volume" role="tabpanel" aria-labelledby="mt-volume" hidden><div class="grid" id="grid-volume"></div></div>
+    <div id="mp-all" role="tabpanel" aria-labelledby="mt-all" hidden>
+      <div class="controls">
+        <label class="chk"><input type="checkbox" id="all-liquid" checked> Liquid items only</label>
+        <label class="chk"><input type="checkbox" id="all-watch"> Watchlist only</label>
+      </div>
+      <div class="tbl-wrap"><table id="tbl-all"><thead><tr>
+        <th class="sticky"><button data-sort="name">Item</button></th>
+        <th class="n"><button data-sort="low">Buy (low)</button></th>
+        <th class="n"><button data-sort="high">Sell (high)</button></th>
+        <th class="n"><button data-sort="tax">Tax</button></th>
+        <th class="n"><button data-sort="profit">Profit</button></th>
+        <th class="n"><button data-sort="marginPct">Margin</button></th>
+        <th class="n"><button data-sort="dayVol">Day vol</button></th>
+        <th class="n"><button data-sort="limit">Limit</button></th>
+        <th class="n"><button data-sort="ageMin">Age</button></th>
+        <th>Flags</th>
+      </tr></thead><tbody></tbody></table></div>
+      <div class="more"><button class="btn sm" id="all-more" type="button" hidden>Show more</button></div>
+    </div>
+  </section>
+
+  <section class="sec" id="trending" aria-labelledby="tr-h">
+    <div class="sec-head"><div><h2 id="tr-h">Trending</h2><p class="note">Computed in your browser from the wiki price API. No forecasts, no scores.</p></div></div>
+    <div class="tabs" role="tablist" aria-label="Trending views">
+      <button class="tab" role="tab" id="tt-movers" aria-controls="tp-movers" aria-selected="true">Movers</button>
+      <button class="tab" role="tab" id="tt-arb" aria-controls="tp-arb" aria-selected="false">Arbitrage</button>
+      <button class="tab" role="tab" id="tt-news" aria-controls="tp-news" aria-selected="false">Update Watch</button>
+    </div>
+
+    <div id="tp-movers" role="tabpanel" aria-labelledby="tt-movers">
+      <div class="controls">
+        <div class="seg" role="group" aria-label="Window"><button data-win="1" aria-pressed="true">24h</button><button data-win="7" aria-pressed="false">7d</button></div>
+        <div class="seg" role="group" aria-label="Measure"><button data-mv="up" aria-pressed="true">Price ▲</button><button data-mv="down" aria-pressed="false">Price ▼</button><button data-mv="vol" aria-pressed="false">Volume ▲</button><button data-mv="voldown" aria-pressed="false">Volume ▼</button></div>
+      </div>
+      <p class="note" id="mv-note">&nbsp;</p>
+      <div class="tbl-wrap"><table id="tbl-movers"><thead><tr>
+        <th class="sticky">Item</th><th>Last 7 days (hourly)</th><th class="n">Price Δ</th><th class="n">Volume Δ</th><th class="n">Avg price then</th><th class="n">Avg price now</th><th class="n">Volume then</th><th class="n">Volume now</th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <div id="tp-arb" role="tabpanel" aria-labelledby="tt-arb" hidden>
+      <div class="controls">
+        <div class="seg" role="group" aria-label="Route type"><button data-at="all" aria-pressed="true">All</button><button data-at="set" aria-pressed="false">Item sets</button><button data-at="decant" aria-pressed="false">Decanting</button><button data-at="herb" aria-pressed="false">Herblore</button></div>
+        <div class="seg" role="group" aria-label="Price assumption"><button data-pm="offer" aria-pressed="true" title="Buy at latest low, sell at latest high">Offers</button><button data-pm="instant" aria-pressed="false" title="Buy at latest high, sell at latest low">Instant</button></div>
+        <div class="field"><label for="arb-minvol">Min leg volume/day</label><input id="arb-minvol" type="number" min="0" step="10" inputmode="numeric"></div>
+        <label class="chk"><input type="checkbox" id="arb-profit" checked> Profitable only</label>
+      </div>
+      <p class="note" id="arb-note">&nbsp;</p>
+      <div class="tbl-wrap"><table id="tbl-arb"><thead><tr>
+        <th class="sticky"><button data-asort="name">Route</button></th><th class="n"><button data-asort="profit">Profit</button></th><th class="n"><button data-asort="roi">ROI</button></th><th class="n"><button data-asort="cost">Buy cost</button></th><th class="n"><button data-asort="gross">Sell value</button></th><th class="n"><button data-asort="tax">Tax</button></th><th class="n"><button data-asort="perLimit">Routes / 4h</button></th><th class="n"><button data-asort="ageMin">Age</button></th><th>Buy → sell</th>
+      </tr></thead><tbody></tbody></table></div>
+      <div class="more"><button class="btn sm" id="arb-more" type="button" hidden>Show more</button></div>
+    </div>
+
+    <div id="tp-news" role="tabpanel" aria-labelledby="tt-news" hidden>
+      <div class="banner"><b>What the news mentions and what the price did since. Not a prediction, not financial advice.</b><br><span id="news-meta">&nbsp;</span></div>
+      <div class="news" id="news-list"></div>
+    </div>
+  </section>
+
+  <footer>
+    <p><b>GE tax used here:</b> 2% of the sale price per item, rounded down (so items sold for under 50 gp pay nothing), capped at 5,000,000 gp per item. Exempt items (<span id="tax-count">—</span>, e.g. Old school bond, Energy potions, low-level food, teleport tablets, basic tools) pay no tax. Source: <a href="https://oldschool.runescape.wiki/w/Grand_Exchange#Convenience_fee_and_item_sink" target="_blank" rel="noopener">OSRS Wiki, Grand Exchange: convenience fee</a> and <a href="https://oldschool.runescape.wiki/w/Category:Items_exempt_from_Grand_Exchange_tax" target="_blank" rel="noopener">Items exempt from Grand Exchange tax</a>, checked <span id="routes-built">—</span> (UTC date).</p>
+    <p><b>Data:</b> prices, volumes and buy limits come from the <a href="https://oldschool.runescape.wiki/w/RuneScape:Real-time_Prices" target="_blank" rel="noopener">OSRS Wiki real-time prices API</a> (/latest, /5m, /24h, /timeseries, /mapping), fetched directly by your browser and cached as the API's headers allow. Routes are parsed from wiki pages by <code>tools/build_routes.py</code>; news mentions come from a dated snapshot of the official feed (<code>tools/fetch_news.py</code>).</p>
+    <p>No trackers, no analytics, no cookies. Your filters and watchlist stay in this browser (localStorage). Not affiliated with Jagex or the OSRS Wiki. Always check prices in-game before trading.</p>
+  </footer>
+</main>
+
+<dialog id="item-modal" aria-labelledby="md-name">
+  <div class="mhead">
+    <div><h2 id="md-name">Item</h2><div class="note" id="md-sub"></div></div>
+    <div style="display:flex;gap:6px"><button class="btn sm" id="md-watch" type="button">☆ Watch</button><button class="btn sm" id="md-close" type="button" aria-label="Close">✕</button></div>
+  </div>
+  <div class="mbody" id="md-body"></div>
+</dialog>
+
+<script src="data/routes.js"></script>
+<script src="data/news.js"></script>
+<script>
+'use strict';
+/* ==========================================================================
+   RunePulse (RuneVest.Com) - static, no build step, no third-party scripts.
+   Price data: OSRS Wiki real-time prices API, https://prices.runescape.wiki
+   Docs: https://oldschool.runescape.wiki/w/RuneScape:Real-time_Prices
+   The wiki asks for a descriptive User-Agent. Browsers do not allow pages to set
+   User-Agent (it is a forbidden header), so this page sends none; the build
+   scripts in /tools do. We only fetch bulk endpoints (no per-item loops over
+   /latest) and we reuse responses for as long as their cache headers say.
+   ========================================================================== */
+const API = 'https://prices.runescape.wiki/api/v1/osrs';
+const DAY = 86400;
+// Minimum reuse times (ms), matching the API's cache headers: /latest max-age=60,
+// /5m and /timeseries change every 5 min / 1 h, /mapping max-age=3600, /24h?timestamp= is historical.
+const TTL = { latest: 60e3, '5m': 300e3, mapping: 3600e3, timeseries: 600e3, day: Infinity };
+
+/* ---------- GE tax ----------
+   Rule (OSRS Wiki, "Grand Exchange" > "Convenience fee and item sink", checked 2026-09-28):
+   https://oldschool.runescape.wiki/w/Grand_Exchange#Convenience_fee_and_item_sink
+   "Most transactions on the Grand Exchange are subject to a 2% tax ... capped at a maximum of
+   5 million coins per item." "The 2% tax rounds down to the nearest whole number, so items sold
+   for below 50 coins have a tax of less than one coin, and so have no tax obligation."
+   Raised from 1% to 2% on 29 May 2025. Exempt items: Category:Items exempt from Grand Exchange tax
+   https://oldschool.runescape.wiki/w/Category:Items_exempt_from_Grand_Exchange_tax
+   (resolved to item ids in data/routes.js by tools/build_routes.py). Only the seller pays it. */
+const TAX_RATE = 0.02, TAX_CAP = 5000000;
+const ROUTES = window.RV_ROUTES || { taxExempt: [], sets: [], decant: [], recipes: [] };
+const NEWS = window.RV_NEWS || null;
+const TAX_EXEMPT = new Set(ROUTES.taxExempt.map(x => x.id));
+function geTax(price, id) {
+  if (!price || TAX_EXEMPT.has(id)) return 0;
+  return Math.min(Math.floor(price * TAX_RATE), TAX_CAP);
+}
+
+/* ---------- settings ---------- */
+const DEFAULTS = { minVol: 500, maxSpread: 10, maxAge: 30, minPrice: 100, arbMinVol: 100 };
+const S = Object.assign({}, DEFAULTS, safeJSON(localStorage.getItem('rv_settings')) || {});
+let watch = new Set(safeJSON(localStorage.getItem('osrs_watchlist')) || []);
+function saveSettings() { localStorage.setItem('rv_settings', JSON.stringify(S)); }
+function safeJSON(s) { try { return JSON.parse(s); } catch (e) { return null; } }
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const NF = new Intl.NumberFormat('en-US');
+const fmt = n => (n == null || !isFinite(n)) ? '—' : NF.format(Math.round(n));
+function short(n) {
+  if (n == null || !isFinite(n)) return '—';
+  const a = Math.abs(n);
+  if (a >= 1e9) return (n / 1e9).toFixed(2).replace(/\.?0+$/, '') + 'b';
+  if (a >= 1e7) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'm';
+  if (a >= 1e5) return (n / 1e3).toFixed(0) + 'k';
+  return fmt(n);
+}
+const pct = (n, d = 1) => (n == null || !isFinite(n)) ? '—' : (n > 0 ? '+' : '') + n.toFixed(d) + '%';
+const cls = n => n > 0 ? 'up' : n < 0 ? 'down' : 'mute';
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ago = min => min == null ? '—' : min < 1 ? '<1m' : min < 60 ? Math.round(min) + 'm' : min < 1440 ? (min / 60).toFixed(1).replace(/\.0$/, '') + 'h' : Math.round(min / 1440) + 'd';
+const utcDay = ts => new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+const clock = t => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function median(a) { if (!a.length) return null; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+function dayAvg(d) { // volume-weighted average traded price for a /24h or /1h bucket
+  if (!d) return null;
+  const hv = d.highPriceVolume || 0, lv = d.lowPriceVolume || 0, ah = d.avgHighPrice, al = d.avgLowPrice;
+  if (ah && al && hv + lv) return (ah * hv + al * lv) / (hv + lv);
+  return ah || al || null;
+}
+const dayVol = d => d ? (d.highPriceVolume || 0) + (d.lowPriceVolume || 0) : 0;
+const daySpread = d => d && d.avgHighPrice && d.avgLowPrice ? Math.abs(d.avgHighPrice - d.avgLowPrice) / d.avgLowPrice * 100 : null;
+
+/* ---------- API with cache ---------- */
+const memo = new Map();
+async function api(path, ttl) {
+  const hit = memo.get(path);
+  if (hit && (hit.data || hit.p) && (Date.now() - hit.t < ttl)) return hit.data || hit.p;
+  const p = fetch(API + path, { cache: 'default', credentials: 'omit' }).then(r => {
+    if (!r.ok) throw new Error(path + ' → HTTP ' + r.status);
+    return r.json();
+  });
+  memo.set(path, { t: Date.now(), p });
+  try { const data = await p; memo.set(path, { t: Date.now(), data }); return data; }
+  catch (e) { memo.delete(path); throw e; }
+}
+async function pool(tasks, n) { // tiny concurrency limiter for per-item /timeseries calls
+  const out = []; let i = 0;
+  await Promise.all(Array.from({ length: n }, async () => { while (i < tasks.length) { const k = i++; try { out[k] = await tasks[k](); } catch (e) { out[k] = null; } } }));
+  return out;
+}
+
+/* ---------- state ---------- */
+const D = { meta: new Map(), latest: {}, five: {}, day: {}, dayPrev: {}, dayWeek: {}, dayTs: null, items: [], byId: new Map(), fetched: {} };
+
+async function loadDays() {
+  // /24h?timestamp=<UTC midnight> returns that whole UTC day. Use the latest complete day,
+  // falling back one more day if the API has not published it yet.
+  let ts = Math.floor(Date.now() / 1000 / DAY) * DAY - DAY;
+  let d = (await api('/24h?timestamp=' + ts, TTL.day)).data || {};
+  if (Object.keys(d).length < 500) { ts -= DAY; d = (await api('/24h?timestamp=' + ts, TTL.day)).data || {}; }
+  const [p, w] = await Promise.all([api('/24h?timestamp=' + (ts - DAY), TTL.day), api('/24h?timestamp=' + (ts - 7 * DAY), TTL.day)]);
+  D.day = d; D.dayPrev = p.data || {}; D.dayWeek = w.data || {}; D.dayTs = ts;
+}
+
+async function loadAll() {
+  setStatus('load', 'Loading prices…');
+  $('#btn-refresh').disabled = true;
+  try {
+    const [mapping, latest, five] = await Promise.all([api('/mapping', TTL.mapping), api('/latest', TTL.latest), api('/5m', TTL['5m']), loadDays()]);
+    // Bug fix: /latest and /5m wrap their payload in {data: {...}} (the old code read the top level).
+    D.latest = latest.data || {}; D.five = five.data || {}; D.fiveTs = five.timestamp;
+    if (!D.meta.size || D.metaSrc !== mapping) { D.meta = new Map(mapping.map(m => [m.id, m])); D.metaSrc = mapping; }
+    D.fetched.latest = memo.get('/latest').t; D.fetched.mapping = memo.get('/mapping').t;
+    buildItems();
+    renderAll();
+    setStatus('ok', 'Live · ' + fmt(D.items.length) + ' items');
+    $('#load-error').hidden = true;
+  } catch (e) {
+    console.warn('Load failed', e);
+    setStatus('err', 'Price API unreachable');
+    const el = $('#load-error'); el.hidden = false;
+    el.textContent = 'Could not load prices from prices.runescape.wiki (' + e.message + '). Check your connection and press Refresh.';
+  } finally {
+    $('#btn-refresh').disabled = false; // repeat clicks reuse cached data until each endpoint's TTL passes
+  }
+}
+
+function buildItems() {
+  const now = Date.now() / 1000;
+  const items = [];
+  for (const [k, v] of Object.entries(D.latest)) {
+    const id = +k, m = D.meta.get(id) || {};
+    const high = v.high || null, low = v.low || null;
+    const f = D.five[k] || {}, dd = D.day[k], dp = D.dayPrev[k], dw = D.dayWeek[k];
+    const times = [v.highTime, v.lowTime].filter(Boolean);
+    const ageMin = times.length === 2 ? (now - Math.min(...times)) / 60 : null;
+    const tax = high ? geTax(high, id) : null;
+    const profit = high && low ? high - tax - low : null;
+    items.push({
+      id, name: m.name || ('Item ' + id), members: !!m.members, limit: m.limit || null, highalch: m.highalch || null, examine: m.examine || '',
+      high, low, highTime: v.highTime, lowTime: v.lowTime, ageMin, tax, profit,
+      marginPct: profit != null && low ? profit / low * 100 : null,
+      spreadPct: high && low ? (high - low) / low * 100 : null,
+      v5h: f.highPriceVolume || 0, v5l: f.lowPriceVolume || 0,
+      dayVol: dayVol(dd), dayAvg: dayAvg(dd), prevVol: dayVol(dp), prevAvg: dayAvg(dp), weekVol: dayVol(dw), weekAvg: dayAvg(dw),
+      daySpread: daySpread(dd), prevSpread: daySpread(dp), weekSpread: daySpread(dw),
+    });
+  }
+  D.items = items; D.byId = new Map(items.map(i => [i.id, i]));
+}
+
+/* ---------- liquidity filter ---------- */
+function liquidReason(i) {
+  if (!i.high || !i.low) return 'noprice';
+  if (i.dayVol < S.minVol) return 'vol';
+  if (Math.abs(i.spreadPct) > S.maxSpread) return 'spread';
+  if (i.ageMin == null || i.ageMin > S.maxAge) return 'stale';
+  if (i.low < S.minPrice) return 'price';
+  return null;
+}
+function userFilter(i) {
+  const q = $('#f-search').value.trim().toLowerCase();
+  if (q && !i.name.toLowerCase().includes(q)) return false;
+  const m = $('#f-members').value;
+  if (m === 'm' && !i.members) return false;
+  if (m === 'f' && i.members) return false;
+  const mp = +$('#f-maxprice').value;
+  if (mp && i.low > mp) return false;
+  return true;
+}
+
+/* ---------- rendering: metrics + market ---------- */
+let liquid = [];
+function renderAll() {
+  const reasons = { noprice: 0, vol: 0, spread: 0, stale: 0, price: 0 };
+  liquid = [];
+  for (const i of D.items) { const r = liquidReason(i); i.liquid = !r; if (r) reasons[r]++; else liquid.push(i); }
+  $('#m-items').textContent = fmt(D.items.length);
+  $('#m-items-s').textContent = 'latest trade prices, ' + (D.fetched.latest ? clock(D.fetched.latest) : '');
+  $('#m-liquid').textContent = fmt(liquid.length);
+  $('#m-liquid-s').textContent = 'of ' + fmt(D.items.length) + ' (' + (liquid.length / Math.max(1, D.items.length) * 100).toFixed(0) + '%)';
+  const med = median(liquid.map(i => i.marginPct));
+  const medEl = $('#m-median'); medEl.textContent = pct(med, 2); medEl.className = 'v ' + cls(med);
+  const pos = liquid.filter(i => i.profit > 0);
+  $('#m-pos').textContent = fmt(pos.length);
+  $('#m-pos-s').textContent = pos.length ? 'avg ' + pct(pos.reduce((a, i) => a + i.marginPct, 0) / pos.length, 2) + ' on those' : ' ';
+  const best = [...liquid].sort((a, b) => b.marginPct - a.marginPct)[0];
+  $('#m-best').textContent = best ? pct(best.marginPct) : '—';
+  $('#m-best-s').textContent = best ? best.name + ' · ' + short(best.profit) + ' gp/ea' : ' ';
+  const top = [...liquid].sort((a, b) => b.dayVol - a.dayVol)[0];
+  $('#m-vol').textContent = top ? top.name : '—';
+  $('#m-vol-s').textContent = top ? short(top.dayVol) + ' traded on ' + utcDay(D.dayTs) + ' (UTC)' : ' ';
+  $('#f-summary').innerHTML = `<b>${fmt(liquid.length)}</b> of ${fmt(D.items.length)} items pass. Removed: ${fmt(reasons.vol)} low volume, ${fmt(reasons.spread)} wide spread, ${fmt(reasons.stale)} stale, ${fmt(reasons.price)} below min price, ${fmt(reasons.noprice)} missing a buy or sell price.`;
+  const tt = [];
+  if (D.fetched.latest) tt.push('/latest ' + clock(D.fetched.latest));
+  if (D.fiveTs) tt.push('/5m ' + clock(D.fiveTs * 1000));
+  if (D.dayTs) tt.push('day ' + utcDay(D.dayTs) + ' UTC');
+  $('#st-times').textContent = tt.join(' · ');
+  $('#watch-count').textContent = watch.size;
+  $('#tax-count').textContent = ROUTES.taxExempt.length + ' item ids';
+  $('#routes-built').textContent = ROUTES.builtAt || '—';
+  renderMarket();
+  renderMovers();
+  renderArb();
+  renderNews();
+}
+
+function card(i) {
+  const w = watch.has(i.id);
+  return `<button class="card" type="button" data-id="${i.id}">
+    <div class="nm"><span>${esc(i.name)} ${i.members ? '<span class="tag">M</span>' : ''} ${TAX_EXEMPT.has(i.id) ? '<span class="tag blue">NO TAX</span>' : ''}</span><span class="${w ? 'gold' : 'dim'}" aria-label="${w ? 'On watchlist' : ''}">${w ? '★' : ''}</span></div>
+    <div class="kv">
+      <div><span>Buy (low)</span><b class="up">${fmt(i.low)}</b></div>
+      <div><span>Sell (high)</span><b class="gold">${fmt(i.high)}</b></div>
+      <div><span>Tax</span><b>${fmt(i.tax)}</b></div>
+      <div><span>Day volume</span><b>${short(i.dayVol)}</b></div>
+      <div><span>Buy limit / 4h</span><b>${i.limit ? fmt(i.limit) : '?'}</b></div>
+      <div><span>Price age</span><b>${ago(i.ageMin)}</b></div>
+    </div>
+    <div class="profit"><span class="mute" style="font-size:12px">Profit after tax</span><span><b class="${cls(i.profit)}">${fmt(i.profit)}</b> <span class="${cls(i.marginPct)}" style="font-size:12px">${pct(i.marginPct, 2)}</span></span></div>
+  </button>`;
+}
+let allSort = { k: 'dayVol', dir: -1 }, allShown = 100;
+function renderMarket() {
+  const L = liquid.filter(userFilter);
+  const flips = L.filter(i => i.profit > 0).sort((a, b) => b.marginPct - a.marginPct || b.dayVol - a.dayVol);
+  $('#c-flips').textContent = fmt(flips.length);
+  $('#grid-flips').innerHTML = flips.slice(0, 24).map(card).join('') || '<div class="empty">No liquid item is profitable after tax with these filters.</div>';
+  const vol = [...L].sort((a, b) => b.dayVol - a.dayVol);
+  $('#grid-volume').innerHTML = vol.slice(0, 24).map(card).join('') || '<div class="empty">No items match.</div>';
+  renderAllTable();
+}
+function renderAllTable() {
+  let rows = D.items.filter(userFilter);
+  if ($('#all-liquid').checked) rows = rows.filter(i => i.liquid);
+  if ($('#all-watch').checked) rows = rows.filter(i => watch.has(i.id));
+  const { k, dir } = allSort;
+  rows.sort((a, b) => { const x = a[k], y = b[k]; if (typeof x === 'string') return dir * x.localeCompare(y); return dir * ((x ?? -Infinity) - (y ?? -Infinity)); });
+  $('#c-all').textContent = fmt(rows.length);
+  const flag = i => [!i.high || !i.low ? '<span class="tag gray">NO PRICE</span>' : '', i.liquid ? '' : '<span class="tag warn">' + ({ vol: 'LOW VOL', spread: 'WIDE', stale: 'STALE', price: 'CHEAP', noprice: '' }[liquidReason(i)] || '') + '</span>', TAX_EXEMPT.has(i.id) ? '<span class="tag blue">NO TAX</span>' : '', watch.has(i.id) ? '<span class="gold">★</span>' : ''].join(' ');
+  $('#tbl-all tbody').innerHTML = rows.slice(0, allShown).map(i => `<tr>
+    <td class="name sticky"><button type="button" data-id="${i.id}">${esc(i.name)}</button> ${i.members ? '<span class="tag">M</span>' : ''}</td>
+    <td class="n up">${fmt(i.low)}</td><td class="n gold">${fmt(i.high)}</td><td class="n">${fmt(i.tax)}</td>
+    <td class="n ${cls(i.profit)}">${fmt(i.profit)}</td><td class="n ${cls(i.marginPct)}">${pct(i.marginPct, 2)}</td>
+    <td class="n">${short(i.dayVol)}</td><td class="n">${i.limit ? fmt(i.limit) : '?'}</td><td class="n">${ago(i.ageMin)}</td><td>${flag(i)}</td></tr>`).join('') || '<tr><td colspan="10" class="empty">No items match.</td></tr>';
+  const more = $('#all-more'); more.hidden = rows.length <= allShown; more.textContent = 'Show more (' + fmt(rows.length - allShown) + ' left)';
+}
+
+/* ---------- sparklines (/timeseries) ---------- */
+const seriesCache = new Map();
+function series(id) {
+  if (!seriesCache.has(id)) seriesCache.set(id, api('/timeseries?timestep=1h&id=' + id, TTL.timeseries).then(r => (r.data || []).slice(-168)).catch(() => null));
+  return seriesCache.get(id);
+}
+function sparkSVG(pts, w = 120, h = 30) {
+  const v = pts.map(p => dayAvg(p)).map((y, x) => [x, y]).filter(p => p[1] != null);
+  if (v.length < 2) return '<span class="dim">no data</span>';
+  const ys = v.map(p => p[1]), mn = Math.min(...ys), mx = Math.max(...ys), n = pts.length - 1 || 1;
+  const d = v.map(([x, y]) => (x / n * (w - 2) + 1).toFixed(1) + ',' + (h - 2 - (mx === mn ? .5 : (y - mn) / (mx - mn)) * (h - 4)).toFixed(1)).join(' ');
+  const col = ys[ys.length - 1] >= ys[0] ? 'var(--up)' : 'var(--down)';
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="7-day hourly price, low ${fmt(mn)}, high ${fmt(mx)}"><polyline fill="none" stroke="${col}" stroke-width="1.6" points="${d}"/></svg>`;
+}
+function fillSparks(root) {
+  const els = [...root.querySelectorAll('[data-spark]')];
+  pool(els.map(el => async () => { const s = await series(+el.dataset.spark); if (el.isConnected) el.innerHTML = s ? sparkSVG(s) : '<span class="dim">n/a</span>'; }), 4);
+}
+
+/* ---------- Movers ---------- */
+let mvWin = 1, mvKind = 'up';
+function renderMovers() {
+  if (!D.dayTs) return;
+  const prevTs = D.dayTs - mvWin * DAY;
+  const rows = [];
+  for (const i of D.items) {
+    const thenAvg = mvWin === 1 ? i.prevAvg : i.weekAvg, thenVol = mvWin === 1 ? i.prevVol : i.weekVol, thenSpread = mvWin === 1 ? i.prevSpread : i.weekSpread;
+    // liquid in BOTH windows (volume, price floor, and a sane gap between the day's average buy and sell prices), so a % change is meaningful
+    if (!i.dayAvg || !thenAvg || i.dayVol < S.minVol || thenVol < S.minVol || i.dayAvg < S.minPrice || thenAvg < S.minPrice) continue;
+    if (i.daySpread == null || thenSpread == null || i.daySpread > S.maxSpread || thenSpread > S.maxSpread) continue;
+    if (!userFilter(i)) continue;
+    rows.push({ i, thenAvg, thenVol, dp: (i.dayAvg / thenAvg - 1) * 100, dv: (i.dayVol / thenVol - 1) * 100 });
+  }
+  const key = { up: r => -r.dp, down: r => r.dp, vol: r => -r.dv, voldown: r => r.dv }[mvKind];
+  rows.sort((a, b) => key(a) - key(b));
+  $('#mv-note').innerHTML = `Volume-weighted average traded price and units traded on <b>${utcDay(D.dayTs)}</b> vs <b>${utcDay(prevTs)}</b> (full UTC days, from /24h). Only items with at least ${fmt(S.minVol)} units traded on both days, average price ≥ ${fmt(S.minPrice)} gp, and a gap between the day's average instant-buy and instant-sell prices ≤ ${S.maxSpread}% (${fmt(rows.length)} items). Sparkline: hourly average price, last 7 days (/timeseries).`;
+  const top = rows.slice(0, 20);
+  const tb = $('#tbl-movers tbody');
+  tb.innerHTML = top.map(r => `<tr>
+    <td class="name sticky"><button type="button" data-id="${r.i.id}">${esc(r.i.name)}</button></td>
+    <td data-spark="${r.i.id}"><span class="dim">…</span></td>
+    <td class="n ${cls(r.dp)}"><b>${pct(r.dp)}</b></td><td class="n ${cls(r.dv)}">${pct(r.dv, 0)}</td>
+    <td class="n">${fmt(r.thenAvg)}</td><td class="n">${fmt(r.i.dayAvg)}</td><td class="n">${short(r.thenVol)}</td><td class="n">${short(r.i.dayVol)}</td></tr>`).join('') || '<tr><td colspan="8" class="empty">No items meet the liquidity rules for both days.</td></tr>';
+  if (!$('#tp-movers').hidden) fillSparks(tb);
+}
+
+/* ---------- Arbitrage ---------- */
+let arbType = 'all', arbMode = 'offer', arbSort = { k: 'profit', dir: -1 }, arbShown = 50;
+function buildRoutes() {
+  const R = [];
+  const nm = id => (D.meta.get(id) || {}).name || ('Item ' + id);
+  for (const s of ROUTES.sets) {
+    const pieces = s.pieces;
+    R.push({ type: 'set', name: nm(s.set) + ' → pieces', how: 'Buy the set, exchange it at a GE clerk (free), sell the pieces', ins: [{ id: s.set, qty: 1 }], outs: pieces, src: ROUTES.sources && ROUTES.sources.sets });
+    R.push({ type: 'set', name: 'Pieces → ' + nm(s.set), how: 'Buy the pieces, exchange them for the set at a GE clerk (free), sell the set', ins: pieces, outs: [{ id: s.set, qty: 1 }], src: ROUTES.sources && ROUTES.sources.sets });
+  }
+  for (const p of ROUTES.decant) {
+    R.push({ type: 'decant', name: p.name + ': 4×(3) → 3×(4)', how: 'Decant at Bob Barter (GE, members, free). Leaves 1 empty vial, not counted.', ins: [{ id: p.d3, qty: 4 }], outs: [{ id: p.d4, qty: 3 }], src: ROUTES.sources && ROUTES.sources.decanting });
+    R.push({ type: 'decant', name: p.name + ': 3×(4) → 4×(3)', how: 'Decant at Bob Barter (GE, members, free); needs 1 extra vial, bought on the GE here.', ins: [{ id: p.d4, qty: 3 }, { id: 229, qty: 1 }], outs: [{ id: p.d3, qty: 4 }], src: ROUTES.sources && ROUTES.sources.decanting });
+  }
+  for (const r of ROUTES.recipes) {
+    R.push({ type: 'herb', name: r.outputs.map(o => nm(o.id)).join(' + ') + (r.level ? ' (Herblore ' + r.level + ')' : ''), how: 'Herblore recipe from the wiki page "' + r.page + '"' + (r.tools ? '; tool: ' + r.tools : '') + (r.notes ? '; requires: ' + r.notes : ''), ins: r.inputs, outs: r.outputs, src: 'https://oldschool.runescape.wiki/w/' + encodeURIComponent(r.page.replace(/ /g, '_')) });
+  }
+  return R;
+}
+let ROUTE_LIST = null;
+function priceRoute(r) {
+  const buyP = i => arbMode === 'offer' ? i.low : i.high, sellP = i => arbMode === 'offer' ? i.high : i.low;
+  let cost = 0, gross = 0, tax = 0, ageMin = 0, minLegVol = Infinity, perLimit = Infinity, maxLegSpread = 0;
+  const leg = i => { ageMin = Math.max(ageMin, i.ageMin ?? Infinity); minLegVol = Math.min(minLegVol, i.dayVol); maxLegSpread = Math.max(maxLegSpread, i.spreadPct == null ? Infinity : Math.abs(i.spreadPct)); };
+  for (const l of r.ins) {
+    const i = D.byId.get(l.id); if (!i || !buyP(i)) return null;
+    cost += buyP(i) * l.qty; leg(i);
+    perLimit = Math.min(perLimit, i.limit ? Math.floor(i.limit / l.qty) : Infinity);
+  }
+  for (const l of r.outs) {
+    const i = D.byId.get(l.id); if (!i || !sellP(i)) return null;
+    gross += sellP(i) * l.qty; tax += geTax(sellP(i), i.id) * l.qty; leg(i);
+  }
+  const profit = gross - tax - cost;
+  return { ...r, cost, gross, tax, profit, roi: cost ? profit / cost * 100 : null, ageMin, minLegVol, maxLegSpread, perLimit: isFinite(perLimit) ? perLimit : null };
+}
+function legList(r) {
+  const nm = id => esc((D.meta.get(id) || {}).name || id);
+  const f = ls => ls.map(l => (l.qty !== 1 ? l.qty + '× ' : '') + nm(l.id)).join(', ');
+  return `<span class="up">Buy</span> ${f(r.ins)} → <span class="gold">sell</span> ${f(r.outs)}`;
+}
+function renderArb() {
+  if (!D.items.length) return;
+  ROUTE_LIST = ROUTE_LIST || buildRoutes();
+  const all = ROUTE_LIST.map(priceRoute).filter(Boolean);
+  let rows = all.filter(r => arbType === 'all' || r.type === arbType);
+  const typed = rows.length;
+  rows = rows.filter(r => r.minLegVol >= S.arbMinVol && r.ageMin <= S.maxAge && r.maxLegSpread <= S.maxSpread);
+  const liquidN = rows.length;
+  const profN = rows.filter(r => r.profit > 0).length;
+  if ($('#arb-profit').checked) rows = rows.filter(r => r.profit > 0);
+  const { k, dir } = arbSort;
+  rows.sort((a, b) => { const x = a[k], y = b[k]; if (typeof x === 'string') return dir * x.localeCompare(y); return dir * ((x ?? -Infinity) - (y ?? -Infinity)); });
+  $('#arb-note').innerHTML = `${fmt(typed)} priced routes of this type (${ROUTES.sets.length} GE item sets × 2 directions, ${ROUTES.decant.length} decantable potions × 2, ${ROUTES.recipes.length} Herblore recipes, all parsed from the OSRS Wiki on ${esc(ROUTES.builtAt || '?')}). ${fmt(liquidN)} have every leg trading ≥ ${fmt(S.arbMinVol)}/day, prices under ${fmt(S.maxAge)} min old and a buy/sell spread ≤ ${S.maxSpread}%; <b>${fmt(profN)}</b> of those are profitable after tax at ${arbMode === 'offer' ? '<b>offer</b> prices (buy at latest low, sell at latest high)' : '<b>instant</b> prices (buy at latest high, sell at latest low)'}. Tax is charged on every item sold. Routes / 4h = the tightest GE buy limit among the items you buy.`;
+  const tb = $('#tbl-arb tbody');
+  const lab = { set: '<span class="tag gray">SET</span>', decant: '<span class="tag blue">DECANT</span>', herb: '<span class="tag">HERB</span>' };
+  tb.innerHTML = rows.slice(0, arbShown).map(r => `<tr>
+    <td class="name sticky">${lab[r.type]} <a href="${esc(r.src || '#')}" target="_blank" rel="noopener" title="${esc(r.how)}" style="color:inherit;font-weight:600;text-decoration:none">${esc(r.name)}</a><div class="dim" style="font-size:11px">${esc(r.how)}</div></td>
+    <td class="n ${cls(r.profit)}"><b>${fmt(r.profit)}</b></td><td class="n ${cls(r.roi)}">${pct(r.roi, 2)}</td>
+    <td class="n">${fmt(r.cost)}</td><td class="n">${fmt(r.gross)}</td><td class="n">${fmt(r.tax)}</td>
+    <td class="n">${r.perLimit == null ? '?' : fmt(r.perLimit)}</td><td class="n">${ago(r.ageMin)}</td><td class="legs">${legList(r)}</td></tr>`).join('') || '<tr><td colspan="9" class="empty">No routes match. Try Instant/Offers, lower the leg volume, or untick "Profitable only".</td></tr>';
+  const more = $('#arb-more'); more.hidden = rows.length <= arbShown; more.textContent = 'Show more (' + fmt(rows.length - arbShown) + ' left)';
+}
+
+/* ---------- Update Watch (news snapshot) ---------- */
+let newsShowAll = new Set();
+function renderNews() {
+  const list = $('#news-list');
+  if (!NEWS) { list.innerHTML = '<div class="empty">News snapshot missing (data/news.js). Run tools/fetch_news.py.</div>'; return; }
+  const fetched = new Date(NEWS.fetchedAt);
+  $('#news-meta').innerHTML = `Posts from the <a href="${esc(NEWS.source)}" target="_blank" rel="noopener">official OSRS news RSS</a>, <b>snapshot fetched ${esc(fetched.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }))} UTC</b> (${esc(fetched.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }))} your time) (the feed does not allow browsers to read it directly, so it is saved by <code>tools/fetch_news.py</code>). Items are literal name matches against /mapping, so a match can be a coincidence. “Before” = average traded price on the full UTC day before the post; “Latest day” = ${D.dayTs ? utcDay(D.dayTs) : 'latest full UTC day'}; “Now” = midpoint of the latest instant buy/sell.`;
+  list.innerHTML = NEWS.posts.map((p, pi) => {
+    const rows = p.items.map(m => {
+      const i = D.byId.get(m.id);
+      const before = m.baseline && m.baseline.avg;
+      const latestDay = i && i.dayAvg;
+      const now = i && i.high && i.low ? (i.high + i.low) / 2 : null;
+      const ch = before && latestDay ? (latestDay / before - 1) * 100 : null;
+      const chNow = before && now ? (now / before - 1) * 100 : null;
+      const thin = !i || i.dayVol < S.minVol;
+      return { m, i, before, latestDay, now, ch, chNow, thin };
+    });
+    const show = newsShowAll.has(pi) ? rows : rows.slice(0, 10);
+    const table = rows.length ? `<div class="tbl-wrap"><table><thead><tr><th class="sticky">Mentioned item</th><th class="n">Δ since</th><th class="n">Before</th><th class="n">Latest day</th><th class="n">Now</th><th class="n">Δ now</th><th class="n">Day vol</th><th class="n">Mentions</th></tr></thead><tbody>${show.map(r => `<tr>
+      <td class="name sticky"><button type="button" data-id="${r.m.id}">${esc(r.m.name)}</button> ${r.thin ? '<span class="tag warn" title="Below your min daily volume">THIN</span>' : ''}</td>
+      <td class="n ${cls(r.ch)}"><b>${pct(r.ch)}</b></td><td class="n">${r.before ? fmt(r.before) : '<span class="dim" title="No trades recorded that day">no trades</span>'}</td>
+      <td class="n">${fmt(r.latestDay)}</td><td class="n">${fmt(r.now)}</td><td class="n ${cls(r.chNow)}">${pct(r.chNow)}</td><td class="n">${r.i ? short(r.i.dayVol) : '—'}</td><td class="n">${r.m.mentions}</td></tr>`).join('')}</tbody></table></div>${rows.length > 10 && !newsShowAll.has(pi) ? `<div class="more"><button class="btn sm" data-news-more="${pi}" type="button">Show all ${rows.length}</button></div>` : ''}` : (p.readError ? '<p class="note">The post text could not be downloaded when the snapshot was taken (' + esc(p.readError) + '), so no item matching was done for it.</p>' : '<p class="note">No tradeable item names from /mapping were found in this post.</p>');
+    return `<article class="post"><div class="meta">${esc(p.date)} · ${esc(p.category || 'News')} · before = ${p.items[0] && p.items[0].baseline ? utcDay(p.items[0].baseline.day) : utcDay(Date.parse(p.date) / 1000 - DAY)} (UTC)</div>
+      <h3><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a></h3><p class="note">${esc(p.description)}</p>${table}</article>`;
+  }).join('');
+}
+
+/* ---------- item modal ---------- */
+let modalId = null;
+async function openItem(id) {
+  const i = D.byId.get(id); if (!i) return;
+  modalId = id;
+  $('#md-name').textContent = i.name;
+  $('#md-sub').textContent = [i.members ? 'Members' : 'F2P', i.examine].filter(Boolean).join(' · ');
+  updateWatchBtn();
+  const t = s => s ? new Date(s * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
+  $('#md-body').innerHTML = `<div class="mgrid">
+    <div class="box"><div class="k">Buy (latest low)</div><div class="v up">${fmt(i.low)}</div><div class="note">last instant-sell ${t(i.lowTime)}</div></div>
+    <div class="box"><div class="k">Sell (latest high)</div><div class="v gold">${fmt(i.high)}</div><div class="note">last instant-buy ${t(i.highTime)}</div></div>
+    <div class="box"><div class="k">Profit after tax</div><div class="v ${cls(i.profit)}">${fmt(i.profit)}</div><div class="note ${cls(i.marginPct)}">${pct(i.marginPct, 2)} · tax ${fmt(i.tax)}${TAX_EXEMPT.has(i.id) ? ' (exempt)' : ''}</div></div>
+    <div class="box"><div class="k">Volume, ${utcDay(D.dayTs)} UTC</div><div class="v">${fmt(i.dayVol)}</div><div class="note">prev day ${fmt(i.prevVol)}</div></div>
+    <div class="box"><div class="k">Last 5 min</div><div class="v">${fmt(i.v5h + i.v5l)}</div><div class="note">${fmt(i.v5h)} at high · ${fmt(i.v5l)} at low</div></div>
+    <div class="box"><div class="k">Buy limit / high alch</div><div class="v">${i.limit ? fmt(i.limit) : '?'}</div><div class="note">per 4h · alch ${fmt(i.highalch)}</div></div>
+  </div>
+  <p class="note">${i.liquid ? '<span class="up">Passes</span>' : '<span class="down">Fails</span>'} your liquidity filter${i.liquid ? '' : ' (' + ({ vol: 'daily volume below ' + fmt(S.minVol), spread: 'spread ' + pct(i.spreadPct) + ' above ' + S.maxSpread + '%', stale: 'a price is ' + ago(i.ageMin) + ' old', price: 'price below ' + fmt(S.minPrice) + ' gp', noprice: 'missing a buy or sell price' }[liquidReason(i)]) + ')'}. Spread ${pct(i.spreadPct, 2)}.</p>
+  <div class="chart"><div class="note" style="margin:0 0 6px">Hourly average instant-buy (gold) and instant-sell (green) prices, last 7 days (/timeseries)</div><div id="md-chart" class="dim">Loading…</div></div>
+  <p class="note"><a href="https://prices.runescape.wiki/osrs/item/${i.id}" target="_blank" rel="noopener">Real-time prices page</a> · <a href="https://oldschool.runescape.wiki/w/Special:Lookup?type=item&id=${i.id}" target="_blank" rel="noopener">Wiki article</a></p>`;
+  const dlg = $('#item-modal'); if (!dlg.open) dlg.showModal();
+  const s = await series(id);
+  if (modalId !== id) return;
+  $('#md-chart').innerHTML = s && s.length > 1 ? chartSVG(s) : 'No hourly data.';
+}
+function chartSVG(pts) {
+  const W = 700, H = 180, P = 44;
+  const hi = pts.map(p => p.avgHighPrice), lo = pts.map(p => p.avgLowPrice);
+  const all = hi.concat(lo).filter(v => v != null); if (!all.length) return 'No data';
+  const mn = Math.min(...all), mx = Math.max(...all), n = pts.length - 1 || 1;
+  const X = k => P + k / n * (W - P - 6), Y = v => 8 + (1 - (mx === mn ? .5 : (v - mn) / (mx - mn))) * (H - 30);
+  const line = (arr, c) => { let d = '', pen = false; arr.forEach((v, k) => { if (v == null) { pen = false; return; } d += (pen ? 'L' : 'M') + X(k).toFixed(1) + ' ' + Y(v).toFixed(1); pen = true; }); return `<path d="${d}" fill="none" stroke="${c}" stroke-width="1.5"/>`; };
+  const d0 = new Date(pts[0].timestamp * 1000), d1 = new Date(pts[pts.length - 1].timestamp * 1000), df = d => d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Price chart from ${fmt(mn)} to ${fmt(mx)} gp">
+    <line x1="${P}" x2="${W}" y1="${Y(mx)}" y2="${Y(mx)}" stroke="#334155"/><line x1="${P}" x2="${W}" y1="${Y(mn)}" y2="${Y(mn)}" stroke="#334155"/>
+    <text x="${P - 4}" y="${Y(mx) + 4}" fill="#94a3b8" font-size="11" text-anchor="end">${short(mx)}</text><text x="${P - 4}" y="${Y(mn) + 4}" fill="#94a3b8" font-size="11" text-anchor="end">${short(mn)}</text>
+    ${line(hi, '#fbbf24')}${line(lo, '#22c55e')}
+    <text x="${P}" y="${H - 4}" fill="#64748b" font-size="11">${df(d0)}</text><text x="${W - 6}" y="${H - 4}" fill="#64748b" font-size="11" text-anchor="end">${df(d1)}</text></svg>`;
+}
+function updateWatchBtn() { const w = watch.has(modalId); $('#md-watch').textContent = w ? '★ Watching' : '☆ Watch'; }
+
+/* ---------- events ---------- */
+function bindTabs(ids, onShow) {
+  ids.forEach(t => $('#' + t).addEventListener('click', () => {
+    ids.forEach(o => { const on = o === t; $('#' + o).setAttribute('aria-selected', on); $('#' + $('#' + o).getAttribute('aria-controls')).hidden = !on; });
+    onShow && onShow(t);
+  }));
+}
+function bindSeg(sel, attr, fn) {
+  document.querySelectorAll(sel + ' button').forEach(b => b.addEventListener('click', () => {
+    b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    fn(b.dataset[attr]);
+  }));
+}
+function init() {
+  const inputs = { '#f-minvol': 'minVol', '#f-spread': 'maxSpread', '#f-age': 'maxAge', '#f-minprice': 'minPrice', '#arb-minvol': 'arbMinVol' };
+  const syncInputs = () => { for (const [sel, k] of Object.entries(inputs)) $(sel).value = S[k]; };
+  syncInputs();
+  let deb;
+  for (const [sel, k] of Object.entries(inputs)) $(sel).addEventListener('input', e => {
+    const v = parseFloat(e.target.value); if (!isFinite(v) || v < 0) return;
+    S[k] = v; saveSettings(); clearTimeout(deb); deb = setTimeout(() => D.items.length && renderAll(), 200);
+  });
+  $('#f-reset').addEventListener('click', () => { Object.assign(S, DEFAULTS); saveSettings(); syncInputs(); renderAll(); });
+  $('#f-search').addEventListener('input', () => { clearTimeout(deb); deb = setTimeout(() => { allShown = 100; renderMarket(); renderMovers(); }, 200); });
+  ['#f-members', '#f-maxprice'].forEach(s => $(s).addEventListener('change', () => { renderMarket(); renderMovers(); }));
+  ['#all-liquid', '#all-watch'].forEach(s => $(s).addEventListener('change', () => { allShown = 100; renderAllTable(); }));
+  $('#all-more').addEventListener('click', () => { allShown += 200; renderAllTable(); });
+  $('#arb-more').addEventListener('click', () => { arbShown += 100; renderArb(); });
+  $('#arb-profit').addEventListener('change', renderArb);
+  document.querySelectorAll('#tbl-all th button').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.sort; allSort = { k, dir: allSort.k === k ? -allSort.dir : (k === 'name' ? 1 : -1) }; renderAllTable();
+  }));
+  document.querySelectorAll('#tbl-arb th button').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.asort; arbSort = { k, dir: arbSort.k === k ? -arbSort.dir : (k === 'name' ? 1 : -1) }; renderArb();
+  }));
+  bindTabs(['mt-flips', 'mt-volume', 'mt-all']);
+  bindTabs(['tt-movers', 'tt-arb', 'tt-news'], t => { if (t === 'tt-movers') fillSparks($('#tbl-movers tbody')); });
+  bindSeg('#tp-movers .seg[aria-label=Window]', 'win', v => { mvWin = +v; renderMovers(); });
+  bindSeg('#tp-movers .seg[aria-label=Measure]', 'mv', v => { mvKind = v; renderMovers(); });
+  bindSeg('#tp-arb .seg[aria-label="Route type"]', 'at', v => { arbType = v; arbShown = 50; renderArb(); });
+  bindSeg('#tp-arb .seg[aria-label="Price assumption"]', 'pm', v => { arbMode = v; renderArb(); });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-id]'); if (b) { openItem(+b.dataset.id); return; }
+    const m = e.target.closest('[data-news-more]'); if (m) { newsShowAll.add(+m.dataset.newsMore); renderNews(); }
+  });
+  $('#md-close').addEventListener('click', () => $('#item-modal').close());
+  $('#item-modal').addEventListener('click', e => { if (e.target.id === 'item-modal') e.target.close(); });
+  $('#md-watch').addEventListener('click', () => {
+    watch.has(modalId) ? watch.delete(modalId) : watch.add(modalId);
+    localStorage.setItem('osrs_watchlist', JSON.stringify([...watch])); updateWatchBtn(); $('#watch-count').textContent = watch.size; renderMarket();
+  });
+  $('#btn-watch').addEventListener('click', () => {
+    $('#all-watch').checked = true; $('#all-liquid').checked = false; $('#mt-all').click(); renderAllTable();
+    document.getElementById('mk-h').scrollIntoView({ behavior: 'smooth' });
+  });
+  $('#btn-refresh').addEventListener('click', loadAll);
+  document.addEventListener('keydown', e => { if (e.key === '/' && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); $('#f-search').focus(); } });
+  renderNews();
+  loadAll();
+}
+function setStatus(kind, text) { $('#st-dot').className = 'dot ' + kind; $('#st-text').textContent = text; }
+init();
+</script>
+</body>
+</html>
