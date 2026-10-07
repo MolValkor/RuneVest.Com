@@ -50,6 +50,8 @@ An exact day is shown only when Jagex gave one; otherwise only the month or seas
 python3 -m http.server 8000   # then open http://localhost:8000/
 ```
 
+The look is a parchment-and-gold theme in `assets/base.css`: textures are CSS gradients and inline SVG noise, with no game art or Jagex assets. Headings use [Cinzel](https://github.com/NDISCOVER/Cinzel), self-hosted in `assets/fonts/` under the SIL Open Font License (`OFL-Cinzel.txt`).
+
 The scripts use only the Python standard library. No build step, trackers, cookies or third-party scripts. Filters and watchlists are stored in your browser's localStorage.
 
 Not affiliated with Jagex or the RuneScape / OSRS / Dragonwilds wikis. Nothing here is financial advice. Always check prices in-game before trading.

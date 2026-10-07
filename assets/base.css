@@ -1,5 +1,5 @@
 /* RuneVest shared styles (originally the OSRS page's inline CSS). */
-:root{--bg:#0f172a;--panel:#1e293b;--panel2:#162032;--line:#334155;--line2:#475569;--txt:#e2e8f0;--mute:#94a3b8;--dim:#64748b;--gold:#f59e0b;--gold2:#fbbf24;--up:#22c55e;--down:#f87171;--blue:#60a5fa;--r:14px}
+:root{--bg:#f6eed6;--panel:#ebdfbf;--panel2:#e4d6b1;--sheet:#d9c69b;--line:#b89e6c;--line2:#8a6a1f;--txt:#33240f;--mute:#55401f;--dim:#5c4626;--gold:#c8a24a;--gold2:#6b470c;--goldhi:#f3dc8f;--golddk:#8a6a1f;--up:#175c24;--down:#9a1f16;--blue:#1d4a82;--link:#6e3705;--accent:#c8a24a;--accent-ink:#6b470c;--accent-hdr:#f3dc8f;--r:6px;--head:'Cinzel','Trajan Pro','Palatino Linotype',Palatino,'Book Antiqua',Georgia,serif}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif}
@@ -193,3 +193,164 @@ details summary{cursor:pointer;color:var(--gold2)}
 .tree li{margin:2px 0}
 .tree .q{color:var(--gold2);font-weight:700;font-variant-numeric:tabular-nums}
 .tree .fac{color:var(--dim);font-size:11px}
+
+/* =====================================================================
+   Parchment theme: dark stone page, wood header, parchment sheet with
+   gold trim. All textures are CSS gradients / inline SVG noise; no game
+   art or Jagex assets. Cinzel is self-hosted (SIL OFL, assets/fonts).
+   ===================================================================== */
+@font-face{font-family:'Cinzel';font-style:normal;font-weight:400 900;font-display:swap;src:url(fonts/cinzel-latin.woff2) format('woff2')}
+:root{
+ --noise:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .32 0 0 0 0 .22 0 0 0 0 .08 0 0 0 .5 -.18'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+ --fibres:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .05' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .3 0 0 0 0 .1 0 0 0 .9 -.42'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+ --stone:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.035' numOctaves='4' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .42 0 0 0 0 .32 0 0 0 .55 -.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+ --trim:linear-gradient(135deg,#f6e3a1 0%,#c8a24a 22%,#8a6a1f 48%,#d8b85e 70%,#7a5a18 100%);
+ --corner:var(--golddk);
+}
+body[data-game=osrs]{--accent:#d9902a;--accent-ink:#7a4200;--accent-hdr:#f0b453}
+body[data-game=rs3]{--accent:#4f86c6;--accent-ink:#1d4a82;--accent-hdr:#9cc3f0}
+body[data-game=dw]{--accent:#8a5cc0;--accent-ink:#5b2d82;--accent-hdr:#cdb0f0}
+html{background:#17120d}
+body{color:var(--txt);background:var(--stone),radial-gradient(1200px 700px at 50% -10%,#3a2c1d 0%,transparent 70%),linear-gradient(#211911,#120d09);background-attachment:fixed;min-height:100vh}
+a{color:var(--link)}
+a:hover{color:var(--txt)}
+:focus-visible{outline:2px solid var(--golddk);outline-offset:2px}
+h1,h2,.brand b,.gamecard h2,.metric .k,.fgroup legend,.gamecard .eyebrow,dialog h2{font-family:var(--head)}
+h1,h2{font-weight:700;letter-spacing:.01em}
+/* ---- wood header with gold trim ---- */
+.top{background:repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 2px,transparent 2px 9px),linear-gradient(#3d2a16,#24180c);backdrop-filter:none;border-bottom:0;box-shadow:0 1px 0 #f3dc8f inset,0 -3px 0 var(--accent) inset,0 -4px 0 #4a3415 inset,0 3px 0 #c8a24a,0 4px 0 #5d4513,0 8px 18px rgba(0,0,0,.55);color:#f1e4c3;padding-bottom:4px}
+.top .wrap{padding-bottom:12px}
+.brand b{font-size:23px;letter-spacing:.03em;color:#f6e7bf;text-shadow:0 1px 0 #000,0 0 10px rgba(200,162,74,.35)}
+.brand small{color:var(--accent-hdr);font-family:var(--head);letter-spacing:.18em}
+.logo{border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff1b8 0%,#e3bf5f 32%,#a77d22 72%,#6b4d10 100%);box-shadow:0 0 0 2px #2a1c0b,0 0 0 3px #c8a24a,0 2px 6px rgba(0,0,0,.6)}
+.top .status{color:#d9c69b}
+.top .pill{background:linear-gradient(#2b1e10,#1d140a);border:1px solid #8a6a1f;color:#ecdcb4;box-shadow:inset 0 1px 0 rgba(243,220,143,.15)}
+.top .pill b{color:#f6e7bf}
+.games a{color:#e6d3a3;font-family:var(--head);font-weight:700;letter-spacing:.04em;border-radius:4px}
+.games a:hover{color:#fff4d0;background:rgba(200,162,74,.16);border-color:rgba(200,162,74,.4)}
+.games a[aria-current=page]{color:#2b1d08;background:linear-gradient(#f6e3a1,#d4af55 50%,#b38d3a);border-color:#6b4f14;box-shadow:inset 0 1px 0 #fff6cf,0 1px 2px rgba(0,0,0,.5)}
+/* ---- buttons: dark leather with gold edge ---- */
+.btn{background:linear-gradient(#5f4322,#3e2a14);color:#f3dfa6;border:1px solid #c8a24a;border-radius:4px;box-shadow:inset 0 1px 0 rgba(243,220,143,.35),0 1px 2px rgba(40,25,8,.45);text-shadow:0 1px 0 rgba(0,0,0,.5)}
+.btn:hover{background:linear-gradient(#73522a,#4a3218);border-color:#f3dc8f;color:#fff4d0}
+.btn.sm{border-radius:4px}
+/* ---- the parchment sheet ---- */
+main.wrap{position:relative;margin:22px auto 34px;width:min(1400px,calc(100% - 40px));max-width:none;padding:4px 26px 2px;border:3px solid transparent;border-radius:4px;
+ background:var(--fibres) padding-box,var(--noise) padding-box,radial-gradient(130% 110% at 50% 45%,transparent 62%,rgba(110,70,20,.22) 100%) padding-box,linear-gradient(var(--sheet),var(--sheet)) padding-box,var(--trim) border-box;
+ box-shadow:0 0 0 1px #2a1c0b,0 0 0 4px #5d4513,0 0 0 5px #c8a24a,0 14px 40px rgba(0,0,0,.7)}
+main.wrap::before{content:"";position:absolute;inset:6px;pointer-events:none;border:1px solid rgba(138,106,31,.55);border-radius:2px}
+/* ornate corner brackets */
+.panel,.card,.post,.rm-item,.gamecard,dialog,main.wrap{--cs:14px;--ct:2px}
+.panel,.card,.post,.rm-item,.gamecard{position:relative}
+.panel::after,.card::after,.post::after,.rm-item::after,.gamecard::after,main.wrap::after{content:"";position:absolute;inset:4px;pointer-events:none;
+ background:
+  linear-gradient(var(--corner),var(--corner)) left top/var(--cs) var(--ct),linear-gradient(var(--corner),var(--corner)) left top/var(--ct) var(--cs),
+  linear-gradient(var(--corner),var(--corner)) right top/var(--cs) var(--ct),linear-gradient(var(--corner),var(--corner)) right top/var(--ct) var(--cs),
+  linear-gradient(var(--corner),var(--corner)) left bottom/var(--cs) var(--ct),linear-gradient(var(--corner),var(--corner)) left bottom/var(--ct) var(--cs),
+  linear-gradient(var(--corner),var(--corner)) right bottom/var(--cs) var(--ct),linear-gradient(var(--corner),var(--corner)) right bottom/var(--ct) var(--cs);
+ background-repeat:no-repeat}
+main.wrap::after{inset:10px;--cs:26px;--ct:3px}
+/* ---- parchment panels with gold bevel ---- */
+.panel,.card,.post,.rm-item,.gamecard,.tbl-wrap,dialog{border:2px solid transparent;border-radius:var(--r);color:var(--txt);
+ background:var(--noise) padding-box,radial-gradient(140% 120% at 50% 40%,transparent 60%,rgba(122,84,30,.14) 100%) padding-box,linear-gradient(var(--panel),var(--panel)) padding-box,var(--trim) border-box;
+ box-shadow:0 0 0 1px rgba(58,40,15,.55),inset 0 0 0 1px rgba(255,248,220,.55),0 2px 5px rgba(40,25,8,.3)}
+.card:hover,.gamecard:hover{box-shadow:0 0 0 1px rgba(58,40,15,.7),inset 0 0 0 1px rgba(255,248,220,.7),0 0 0 3px rgba(200,162,74,.45),0 4px 10px rgba(40,25,8,.35);border-color:transparent}
+.card:focus-visible,.gamecard:focus-visible{outline:3px solid var(--golddk);outline-offset:2px}
+.tbl-wrap{background:linear-gradient(var(--panel),var(--panel)) padding-box,var(--trim) border-box}
+.post .tbl-wrap{background:linear-gradient(var(--panel2),var(--panel2)) padding-box,var(--trim) border-box}
+.rm-item.past{opacity:1;--panel:#e1d3ae}
+.rm-item.past h3,.rm-item.past .rm-when{color:var(--mute)}
+/* text tones on parchment */
+.hero h1{font-size:34px;color:#2b1c09;text-shadow:0 1px 0 rgba(255,246,214,.6)}
+.hero h1::after{content:"\25C6";display:block;width:min(320px,80%);margin:6px 0 2px;color:var(--accent-ink);font-size:10px;line-height:10px;text-align:center;
+ background:linear-gradient(90deg,transparent,var(--golddk) 18%,var(--gold) 44%,transparent 46%,transparent 54%,var(--gold) 56%,var(--golddk) 82%,transparent) center/100% 2px no-repeat}
+.hero p{color:var(--mute)}
+h2{color:#2b1c09}
+.sec-head{padding-bottom:8px;background:linear-gradient(90deg,var(--golddk),var(--gold) 30%,rgba(200,162,74,.25) 80%,transparent) left bottom/100% 2px no-repeat}
+.metric .k{font-size:11.5px;letter-spacing:.06em;color:var(--dim);font-weight:700}
+.metric .v{color:#2b1c09}
+.fgroup{border:1px solid var(--line);border-radius:4px;background:rgba(255,250,232,.25)}
+.fgroup legend{color:var(--accent-ink);font-size:12px;letter-spacing:.06em}
+.field label{color:var(--mute)}
+.field input,.field select,#rc-qty{background:var(--bg) !important;color:var(--txt);border:1px solid #9c7d45 !important;border-radius:4px !important;box-shadow:inset 0 1px 2px rgba(90,60,20,.25)}
+.field input::placeholder{color:#7d6644}
+.field input:focus,.field select:focus{outline:2px solid var(--golddk);border-color:var(--golddk)}
+.field .hint{color:var(--dim)}
+/* tabs as gold-edged page tabs */
+.tabs{border-bottom:2px solid var(--golddk);gap:4px}
+.tab{color:var(--mute);border:1px solid transparent;border-bottom:0;border-radius:4px 4px 0 0;margin-bottom:-2px;border-bottom:2px solid transparent}
+.tab:hover{color:var(--txt);background:rgba(200,162,74,.15)}
+.tab[aria-selected=true]{color:#2b1c09;background:linear-gradient(#f3e7c6,var(--panel));border-color:var(--golddk);border-bottom:2px solid var(--panel);box-shadow:inset 0 2px 0 var(--gold)}
+.tab .cnt{color:var(--dim)}
+.seg{border:1px solid var(--golddk);border-radius:4px}
+.seg button{background:var(--bg);color:var(--mute)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed=true],.chip[aria-pressed=true]{background:linear-gradient(#f6e3a1,#d4af55 55%,#b8923f);color:#2b1d08;box-shadow:inset 0 1px 0 #fff6cf}
+.chip{background:var(--bg);border:1px solid #a58550;color:var(--mute);border-radius:4px}
+.chip:hover{border-color:var(--golddk);color:var(--txt)}
+.chip[aria-pressed=true]{border-color:#6b4f14}
+.chip[aria-pressed=true] .cnt{opacity:.9}
+.controls label.chk{color:var(--mute)}
+input[type=checkbox]{accent-color:#8a6a1f}
+/* status / item tags: dark fills, light text, AA contrast */
+.tag,.basis{border-radius:3px;border:1px solid rgba(0,0,0,.25)}
+.tag,.basis.official{background:#1f5b2a;color:#f3f8ea}
+.tag.gray,.basis.released{background:#5a4a37;color:#f6eedc}
+.tag.blue,.basis.poll{background:#1d4477;color:#eef4ff}
+.basis.roadmap-image{background:#5a2a7a;color:#f7eeff}
+.tag.warn,.basis.re-evaluation{background:#94380a;color:#fff5e8}
+.rm-legend{color:var(--mute)}
+/* cards, kv, profit boxes */
+.kv div span{color:var(--dim)}
+.profit,.box,.chart,.gamecard .next{background:var(--bg);border:1px solid #b39860;border-radius:4px;box-shadow:inset 0 1px 3px rgba(90,60,20,.18)}
+.box .k{color:var(--dim)}
+.gamecard .next b{color:var(--txt)}
+.gamecard .eyebrow{color:var(--accent-ink);letter-spacing:.1em;font-size:12px}
+.gamecard ul{color:var(--mute)}
+.gamecard .go{color:var(--link);font-family:var(--head);letter-spacing:.03em}
+.gamecard .live{color:var(--dim)}
+.gamecard .stripe{height:5px;inset:2px 2px auto 2px;border-radius:2px;opacity:.9}
+.gamecard{border-radius:var(--r)}
+/* tables */
+th{background:linear-gradient(#dcc799,#cdb487);color:#3d2a12;border-bottom:2px solid var(--golddk)}
+td{border-top:1px solid rgba(138,106,31,.35)}
+tbody tr:nth-child(even) td{background-color:rgba(160,120,50,.06)}
+tbody tr:hover,tbody tr:hover td{background-color:rgba(200,162,74,.2)}
+td.sticky,th.sticky{background:var(--panel)}
+th.sticky{background:#d4bd90}
+tbody tr:nth-child(even) td.sticky{background:#e6d9b6}
+tbody tr:hover td.sticky{background:#e0cd9d}
+.post .tbl-wrap td.sticky{background:var(--panel2)}
+.post .tbl-wrap tbody tr:hover td.sticky{background:#dcc898}
+td.name button:hover,.post h3 a:hover{color:var(--link)}
+.post h3 a{color:var(--txt)}
+.post .meta{color:var(--dim)}
+.legs,.cr-legs,.staffnote,.fsum,.note,.empty{color:var(--mute)}
+.free{color:var(--dim)}
+/* banners / errors */
+.banner{background:linear-gradient(#f5e6bb,#ecd9a3);border:1px solid #9a6b14;border-left:5px solid var(--golddk);color:#3b2a12;border-radius:4px}
+.banner b{color:#6b3a00}
+.err{background:#f3d9cf;border:1px solid #9b2218;color:#5e120c;border-radius:4px}
+.nfa{color:#7a3300;border-color:#a0601a;background:rgba(255,240,210,.6)}
+.rm-item .mkt{color:var(--txt);border-left:3px solid var(--gold)}
+.rm-when .rel{color:var(--dim)}.rm-when .rel.soon{color:var(--accent-ink)}
+.rm-src{color:var(--dim)}
+.jump a{background:var(--bg);border:1px solid #a58550;border-radius:4px;color:var(--link)}
+.jump a:hover{border-color:var(--golddk);color:var(--txt)}
+details summary{color:var(--link)}
+.tree ul{border-left:1px dashed var(--golddk)}
+.tree .q{color:var(--gold2)}
+.tree .fac{color:var(--dim)}
+/* modal */
+dialog{border-radius:6px;padding:0}
+dialog::backdrop{background:rgba(15,10,5,.78)}
+.mhead{border-bottom:2px solid var(--golddk);background:linear-gradient(rgba(200,162,74,.18),transparent)}
+dialog::after{content:"";position:absolute;inset:4px;pointer-events:none;
+ background:linear-gradient(var(--corner),var(--corner)) left top/var(--cs) var(--ct),linear-gradient(var(--corner),var(--corner)) left top/var(--ct) var(--cs),linear-gradient(var(--corner),var(--corner)) right top/var(--cs) var(--ct),linear-gradient(var(--corner),var(--corner)) right top/var(--ct) var(--cs);background-repeat:no-repeat}
+footer{border-top:0;color:var(--mute);background:linear-gradient(90deg,transparent,var(--gold) 20%,var(--gold) 80%,transparent) top/100% 2px no-repeat}
+::selection{background:rgba(200,162,74,.45);color:#1d1306}
+@media (max-width:640px){
+ main.wrap{width:auto;margin:12px 6px 22px;padding:2px 12px 2px;box-shadow:0 0 0 1px #2a1c0b,0 0 0 3px #c8a24a,0 8px 22px rgba(0,0,0,.7)}
+ main.wrap::after{--cs:16px;inset:8px}
+ .hero h1{font-size:26px}
+ .brand b{font-size:20px}
+}
