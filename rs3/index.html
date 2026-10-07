@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RuneVest · RuneScape 3 GE prices, alchs, movers and roadmap</title>
+<meta name="description" content="RuneScape 3 Grand Exchange guide prices, daily volume, buy limits, a 2% tax flip calculator, High Alchemy profits, guide-price movers and an Update Watch of Jagex's announced roadmap. Data from the RuneScape Wiki.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0f172a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23f59e0b'/%3E%3Cpath d='M6 22l6-7 5 4 9-11' stroke='%230f172a' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../" aria-label="RuneVest hub">
+      <span class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 32 32"><path d="M4 23l7-8 6 5 11-13" stroke="#0f172a" stroke-width="3.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span><b>RuneVest</b><small>RS3</small></span>
+    </a>
+    <nav class="games" aria-label="Games"><a href="../">Hub</a><a href="../osrs/">OSRS</a><a href="./" aria-current="page">RS3</a><a href="../dragonwilds/">Dragonwilds</a></nav>
+    <div class="status">
+      <span class="pill" id="st-pill"><span class="dot load" id="st-dot"></span><span id="st-text">Loading prices…</span></span>
+      <span class="pill hide-sm" id="st-times" title="When Jagex's GE data was last picked up by the wiki">—</span>
+      <button class="btn sm" id="btn-refresh" type="button">Refresh</button>
+      <button class="btn sm" id="btn-watch" type="button" aria-label="Show watchlist">★ <span id="watch-count">0</span></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>RuneScape 3 Grand Exchange</h1>
+    <p>Official GE guide prices, daily volumes and buy limits from the <a href="https://runescape.wiki/w/RuneScape:Grand_Exchange_Market_Watch" target="_blank" rel="noopener">RuneScape Wiki</a>, which copies them from Jagex's Grand Exchange database. Nothing here is financial advice.</p>
+    <nav class="jump" aria-label="Sections"><a href="#mk-h">Market</a><a href="#calc">Flip calculator</a><a href="#movers">Movers</a><a href="#alch">High Alchemy</a><a href="#update-watch">Update Watch</a></nav>
+  </section>
+  <div class="banner"><b>What RS3 data exists:</b> one official guide price per item (set by Jagex from recent trades) plus yesterday's traded volume. Unlike OSRS, there is no public feed of real instant-buy / instant-sell prices for RS3, so this page cannot show live flip margins. The calculator below does the 2% tax math on prices you check in-game. If RuneScape Reignited launches with its own GE (announced for Dec 2, now under review), these are the existing GE's prices.</div>
+  <div id="load-error" class="err" hidden></div>
+
+  <section class="metrics" aria-label="Key metrics">
+    <div class="panel metric"><div class="k">Items with prices</div><div class="v" id="m-items">—</div><div class="s" id="m-items-s">Module:GEPrices</div></div>
+    <div class="panel metric"><div class="k">Pass volume filter</div><div class="v" id="m-liquid">—</div><div class="s" id="m-liquid-s">&nbsp;</div></div>
+    <div class="panel metric"><div class="k">GP traded (1 day)</div><div class="v" id="m-value">—</div><div class="s">guide price × volume, all items</div></div>
+    <div class="panel metric"><div class="k">Most traded by value (liquid)</div><div class="v" id="m-top" style="font-size:17px">—</div><div class="s" id="m-top-s">&nbsp;</div></div>
+    <div class="panel metric"><div class="k">Nature rune</div><div class="v" id="m-nat">—</div><div class="s">guide price, used for alchs</div></div>
+    <div class="panel metric"><div class="k">Best alch (liquid)</div><div class="v gold" id="m-alch">—</div><div class="s" id="m-alch-s">&nbsp;</div></div>
+  </section>
+
+  <section class="panel" aria-label="Filters">
+    <div class="filters">
+      <fieldset class="fgroup">
+        <legend>Rarely-traded filter</legend>
+        <div class="fgrid" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+          <div class="field"><label for="f-minvol">Min daily volume</label><input id="f-minvol" type="number" min="0" step="50" inputmode="numeric"><div class="hint">units traded, previous day</div></div>
+          <div class="field"><label for="f-minprice">Min price (gp)</label><input id="f-minprice" type="number" min="0" step="50" inputmode="numeric"><div class="hint">skips junk-priced items</div></div>
+          <div class="field"><label for="f-minvalue">Min GP traded / day</label><input id="f-minvalue" type="number" min="0" step="100000" inputmode="numeric"><div class="hint">price × volume</div></div>
+        </div>
+        <div class="fsum" id="f-summary">&nbsp;</div>
+        <button class="btn sm" id="f-reset" type="button" style="margin-top:8px">Reset to defaults</button>
+      </fieldset>
+      <fieldset class="fgroup">
+        <legend>Search</legend>
+        <div class="field"><label for="f-search">Item name</label><input id="f-search" type="search" placeholder="e.g. rune bar, dragon bones… (press /)" autocomplete="off"></div>
+      </fieldset>
+      <fieldset class="fgroup">
+        <legend>Other</legend>
+        <div class="fgrid" style="grid-template-columns:1fr 1fr">
+          <div class="field"><label for="f-members">Members</label><select id="f-members"><option value="all">All</option><option value="m">Members</option><option value="f">F2P</option></select></div>
+          <div class="field"><label for="f-maxprice">Max price</label><select id="f-maxprice"><option value="0">Any</option><option value="10000">&lt; 10k</option><option value="100000">&lt; 100k</option><option value="1000000">&lt; 1m</option><option value="10000000">&lt; 10m</option></select></div>
+        </div>
+      </fieldset>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="mk-h">
+    <div class="sec-head"><div><h2 id="mk-h">Market</h2><p class="note">Guide price, volume traded on the previous day, and the 4-hour buy limit. "Tax" is 2% of the guide price, rounded down.</p></div></div>
+    <div class="tabs" role="tablist" aria-label="Market views">
+      <button class="tab" role="tab" id="mt-value" aria-controls="mp-value" aria-selected="true">Most traded (GP)</button>
+      <button class="tab" role="tab" id="mt-volume" aria-controls="mp-volume" aria-selected="false">Most traded (units)</button>
+      <button class="tab" role="tab" id="mt-all" aria-controls="mp-all" aria-selected="false">All items<span class="cnt" id="c-all"></span></button>
+    </div>
+    <div id="mp-value" role="tabpanel" aria-labelledby="mt-value"><div class="grid" id="grid-value"></div></div>
+    <div id="mp-volume" role="tabpanel" aria-labelledby="mt-volume" hidden><div class="grid" id="grid-volume"></div></div>
+    <div id="mp-all" role="tabpanel" aria-labelledby="mt-all" hidden>
+      <div class="controls">
+        <label class="chk"><input type="checkbox" id="all-liquid" checked> Hide rarely traded</label>
+        <label class="chk"><input type="checkbox" id="all-watch"> Watchlist only</label>
+      </div>
+      <div class="tbl-wrap"><table id="tbl-all"><thead><tr>
+        <th class="sticky"><button data-sort="name">Item</button></th>
+        <th class="n"><button data-sort="price">Guide price</button></th>
+        <th class="n"><button data-sort="vol">Day vol</button></th>
+        <th class="n"><button data-sort="value">GP traded</button></th>
+        <th class="n"><button data-sort="limit">Limit</button></th>
+        <th class="n"><button data-sort="tax">Tax</button></th>
+        <th class="n"><button data-sort="alch">High alch</button></th>
+        <th class="n"><button data-sort="alchProfit" title="Per cast at guide price; uses the staff setting in High Alchemy">Alch profit</button></th>
+        <th>Flags</th>
+      </tr></thead><tbody></tbody></table></div>
+      <div class="more"><button class="btn sm" id="all-more" type="button" hidden>Show more</button></div>
+    </div>
+  </section>
+
+  <section class="sec" id="calc" aria-labelledby="calc-h">
+    <div class="sec-head"><div><h2 id="calc-h">Flip calculator <span class="nfa">Not financial advice</span></h2><p class="note">Enter the prices your offers actually fill at in-game. The guide price is only a starting point. Tax: 2% of the sale price per item, rounded down, paid by the seller; sales under 50 coins and bonds pay none (<a href="https://runescape.wiki/w/Grand_Exchange#Trade_tariff" target="_blank" rel="noopener">RuneScape Wiki, Trade tariff</a>). The wiki documents no per-item cap for RS3 (OSRS caps tax at 5m).</p></div></div>
+    <div class="panel">
+      <div class="calc">
+        <div class="field" style="grid-column:span 2"><label for="c-item">Item</label><input id="c-item" list="c-items" placeholder="Start typing an item name" autocomplete="off"><datalist id="c-items"></datalist></div>
+        <div class="field"><label for="c-buy">Your buy price</label><input id="c-buy" type="number" min="0" inputmode="numeric"></div>
+        <div class="field"><label for="c-sell">Your sell price</label><input id="c-sell" type="number" min="0" inputmode="numeric"></div>
+        <div class="field"><label for="c-qty">Quantity</label><input id="c-qty" type="number" min="1" inputmode="numeric"><div class="hint" id="c-qty-hint">&nbsp;</div></div>
+      </div>
+      <div class="calc-out" id="c-out"></div>
+    </div>
+  </section>
+
+  <section class="sec" id="movers" aria-labelledby="mv-h">
+    <div class="sec-head"><div><h2 id="mv-h">Movers <span class="nfa">History, not a forecast</span></h2><p class="note" id="mv-note">Guide-price changes for the most-traded items (by GP traded), from the RuneScape Wiki's price history (<a href="https://api.weirdgloop.org/" target="_blank" rel="noopener">Weird Gloop API</a>). Loaded when you open this section.</p></div></div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Window"><button data-win="1" aria-pressed="true">1 day</button><button data-win="7" aria-pressed="false">7 days</button><button data-win="30" aria-pressed="false">30 days</button></div>
+      <div class="seg" role="group" aria-label="Direction"><button data-dir="up" aria-pressed="true">Price ▲</button><button data-dir="down" aria-pressed="false">Price ▼</button></div>
+      <div class="field"><label for="mv-n">Items checked</label><select id="mv-n"><option>30</option><option selected>60</option><option>100</option></select></div>
+      <button class="btn sm" id="mv-load" type="button">Load movers</button>
+    </div>
+    <div class="tbl-wrap"><table id="tbl-movers"><thead><tr>
+      <th class="sticky">Item</th><th>Last 90 days</th><th class="n">Change</th><th class="n">Then</th><th class="n">Now</th><th class="n">Day vol</th><th class="n">GP traded</th>
+    </tr></thead><tbody><tr><td colspan="7" class="empty">Press "Load movers" (one small request per item).</td></tr></tbody></table></div>
+  </section>
+
+  <section class="sec" id="alch" aria-labelledby="al-h">
+    <div class="sec-head"><div><h2 id="al-h">High Alchemy profits <span class="nfa">Not financial advice</span></h2><p class="note">Buy at guide price, cast High Level Alchemy (55 Magic, 65 XP, 5 fire runes + 1 nature rune per cast, per the <a href="https://runescape.wiki/w/High_Level_Alchemy" target="_blank" rel="noopener">RuneScape Wiki</a>). Profit = alch value − item price − rune cost. Alch values: <a href="https://runescape.wiki/w/Module:GEHighAlchs/data.json" target="_blank" rel="noopener">Module:GEHighAlchs</a>.</p></div></div>
+    <div class="controls">
+      <label class="chk"><input type="checkbox" id="al-staff" checked> Fire staff equipped (fire runes free)</label>
+      <label class="chk"><input type="checkbox" id="al-liquid" checked> Hide rarely traded</label>
+      <div class="field"><label for="al-sort">Sort by</label><select id="al-sort"><option value="p4h">Profit / 4h (buy-limit cap)</option><option value="profit">Profit / cast</option></select></div>
+    </div>
+    <p class="note" id="al-note">&nbsp;</p>
+    <div class="tbl-wrap"><table id="tbl-alch"><thead><tr>
+      <th class="sticky">Item</th><th class="n">Profit / cast</th><th class="n">Profit / 4h</th><th class="n">Limit</th><th class="n">Guide price</th><th class="n">Alch value</th><th class="n">Rune cost</th><th class="n">Day vol</th>
+    </tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="sec" id="update-watch" aria-labelledby="uw-h">
+    <div class="sec-head"><div><h2 id="uw-h">Update Watch</h2><p class="note">What's coming to RuneScape, and what recent news mentioned.</p></div></div>
+    <div class="tabs" role="tablist" aria-label="Update Watch views">
+      <button class="tab" role="tab" id="ut-road" aria-controls="up-road" aria-selected="true">What's coming</button>
+      <button class="tab" role="tab" id="ut-news" aria-controls="up-news" aria-selected="false">News mentions</button>
+    </div>
+    <div id="up-road" role="tabpanel" aria-labelledby="ut-road"><div id="rs3-roadmap"></div></div>
+    <div id="up-news" role="tabpanel" aria-labelledby="ut-news" hidden>
+      <div class="banner"><b>What the news mentions and what the guide price did since. Not a prediction, not financial advice.</b><br><span id="news-meta">&nbsp;</span></div>
+      <div class="news" id="news-list"></div>
+    </div>
+  </section>
+
+  <footer>
+    <p><b>Data:</b> guide prices, volumes and buy limits come live from the RuneScape Wiki's GE data modules (<a href="https://runescape.wiki/w/Module:GEPrices/data.json" target="_blank" rel="noopener">GEPrices</a>, <a href="https://runescape.wiki/w/Module:GEVolumes/data.json" target="_blank" rel="noopener">GEVolumes</a>, <a href="https://runescape.wiki/w/Module:GELimits/data.json" target="_blank" rel="noopener">GELimits</a>), fetched by your browser. Item ids, members flags and alch values are a snapshot from <code>tools/build_rs3_items.py</code> (<span id="items-built">—</span>). Price history: <a href="https://api.weirdgloop.org/" target="_blank" rel="noopener">api.weirdgloop.org</a>. News mentions: a dated snapshot of the official RSS feed (<code>tools/fetch_rs3_news.py</code>).</p>
+    <p>No trackers, no analytics, no cookies. Filters and watchlist stay in this browser. Not affiliated with Jagex or the RuneScape Wiki. Always check prices in-game before trading.</p>
+  </footer>
+</main>
+
+<dialog id="item-modal" aria-labelledby="md-name">
+  <div class="mhead">
+    <div><h2 id="md-name">Item</h2><div class="note" id="md-sub"></div></div>
+    <div style="display:flex;gap:6px"><button class="btn sm" id="md-watch" type="button">☆ Watch</button><button class="btn sm" id="md-close" type="button" aria-label="Close">✕</button></div>
+  </div>
+  <div class="mbody" id="md-body"></div>
+</dialog>
+
+<script src="../data/rs3_items.js"></script>
+<script src="../data/rs3_news.js"></script>
+<script src="../data/roadmaps.js"></script>
+<script src="../assets/roadmap.js"></script>
+<script>
+'use strict';
+/* RuneVest RS3 page. Static, no build step, no third-party scripts.
+   Live data: RuneScape Wiki GE modules (CORS-enabled). They hold Jagex's official guide
+   prices (one price per item) and the previous day's volume, refreshed by the wiki's bot
+   when Jagex's GE database updates. History: Weird Gloop exchange API (wiki backend). */
+const WIKI = 'https://runescape.wiki/w/';
+const MOD = n => WIKI + 'Module:' + n + '/data.json?action=raw';
+const HIST = id => 'https://api.weirdgloop.org/exchange/history/rs/last90d?id=' + id;
+const TAX_RATE = 0.02;
+// RS3 tax (RuneScape Wiki, Grand Exchange > Trade tariff, checked 2026-10-07):
+// "2% of the sales price of items is withheld ... applied to the seller on a per-item basis,
+// and the tax amount is rounded down ... Items traded below 50 coins and bonds are exempt."
+// https://runescape.wiki/w/Grand_Exchange#Trade_tariff . No cap is documented for RS3.
+function geTax(price, name) { if (!price || name === 'Bond') return 0; return Math.floor(price * TAX_RATE); }
+
+const META = new Map(); // name -> {id, members, highalch}
+for (const [name, id, m, ha] of ((window.RV_RS3_ITEMS || {}).items || [])) META.set(name, { id, members: !!m, highalch: ha });
+const NEWS = window.RV_RS3_NEWS || null;
+
+const DEFAULTS = { minVol: 1000, minPrice: 100, minValue: 1000000 };
+const S = Object.assign({}, DEFAULTS, safeJSON(localStorage.getItem('rv_rs3_settings')) || {});
+let watch = new Set(safeJSON(localStorage.getItem('rv_rs3_watch')) || []);
+function safeJSON(s) { try { return JSON.parse(s); } catch (e) { return null; } }
+function saveSettings() { localStorage.setItem('rv_rs3_settings', JSON.stringify(S)); }
+
+const $ = s => document.querySelector(s);
+const NF = new Intl.NumberFormat('en-US');
+const fmt = n => (n == null || !isFinite(n)) ? '—' : NF.format(Math.round(n));
+function short(n) {
+  if (n == null || !isFinite(n)) return '—';
+  const a = Math.abs(n);
+  if (a >= 1e12) return (n / 1e12).toFixed(2).replace(/\.?0+$/, '') + 't';
+  if (a >= 1e9) return (n / 1e9).toFixed(2).replace(/\.?0+$/, '') + 'b';
+  if (a >= 1e7) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'm';
+  if (a >= 1e6) return (n / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'm';
+  if (a >= 1e5) return (n / 1e3).toFixed(0) + 'k';
+  return fmt(n);
+}
+const pct = (n, d = 1) => (n == null || !isFinite(n)) ? '—' : (n > 0 ? '+' : '') + n.toFixed(d) + '%';
+const cls = n => n > 0 ? 'up' : n < 0 ? 'down' : 'mute';
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const wikiUrl = n => WIKI + encodeURIComponent(n.replace(/ /g, '_'));
+const dshort = ts => new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+/* ---------- loading ---------- */
+const D = { items: [], byName: new Map(), updated: null, fetched: null };
+async function getJSON(u) {
+  const r = await fetch(u, { credentials: 'omit' });
+  if (!r.ok) throw new Error(u.replace(/^https:\/\/[^/]+/, '') + ' → HTTP ' + r.status);
+  return r.json();
+}
+async function loadAll() {
+  setStatus('load', 'Loading prices…'); $('#btn-refresh').disabled = true;
+  try {
+    const [P, V, L] = await Promise.all([getJSON(MOD('GEPrices')), getJSON(MOD('GEVolumes')), getJSON(MOD('GELimits'))]);
+    D.updated = P['%LAST_UPDATE_F%'] || null; D.updatedTs = P['%LAST_UPDATE%'] || null; D.fetched = Date.now();
+    const items = [];
+    for (const [name, price] of Object.entries(P)) {
+      if (name.startsWith('%') || typeof price !== 'number') continue;
+      const m = META.get(name) || {};
+      const vol = typeof V[name] === 'number' ? V[name] : null;
+      const limit = typeof L[name] === 'number' ? L[name] : null;
+      items.push({ name, price, vol, limit, id: m.id || null, members: !!m.members, alch: m.highalch || null,
+        value: vol != null ? vol * price : null, tax: geTax(price, name) });
+    }
+    D.items = items; D.byName = new Map(items.map(i => [i.name, i]));
+    const nat = D.byName.get('Nature rune'), fire = D.byName.get('Fire rune');
+    D.nat = nat ? nat.price : null; D.fire = fire ? fire.price : null;
+    renderAll(); fillDatalist();
+    setStatus('ok', 'Live · ' + fmt(items.length) + ' items'); $('#load-error').hidden = true;
+  } catch (e) {
+    console.warn(e); setStatus('err', 'Price data unreachable');
+    const el = $('#load-error'); el.hidden = false; el.textContent = 'Could not load GE data from runescape.wiki (' + e.message + '). Check your connection and press Refresh.';
+  } finally { $('#btn-refresh').disabled = false; }
+}
+
+/* ---------- filters ---------- */
+function liquidReason(i) {
+  if (i.vol == null) return 'novol';
+  if (i.vol < S.minVol) return 'vol';
+  if (i.price < S.minPrice) return 'price';
+  if (i.value < S.minValue) return 'value';
+  return null;
+}
+function userFilter(i) {
+  const q = $('#f-search').value.trim().toLowerCase();
+  if (q && !i.name.toLowerCase().includes(q)) return false;
+  const m = $('#f-members').value; if (m === 'm' && !i.members) return false; if (m === 'f' && i.members) return false;
+  const mp = +$('#f-maxprice').value; if (mp && i.price > mp) return false;
+  return true;
+}
+function alchProfit(i, staff) { if (!i.alch || D.nat == null) return null; const runes = D.nat + (staff ? 0 : 5 * (D.fire || 0)); return i.alch - i.price - runes; }
+
+/* ---------- render ---------- */
+let liquid = [];
+function renderAll() {
+  const reasons = { novol: 0, vol: 0, price: 0, value: 0 }; liquid = [];
+  const staff = $('#al-staff').checked;
+  for (const i of D.items) { const r = liquidReason(i); i.liquid = !r; if (r) reasons[r]++; else liquid.push(i); i.alchProfit = alchProfit(i, staff); }
+  $('#m-items').textContent = fmt(D.items.length);
+  $('#m-items-s').textContent = D.updated ? 'GE data ' + D.updated.replace(/:\d\d \(UTC\)/, ' UTC') : '';
+  $('#m-liquid').textContent = fmt(liquid.length);
+  $('#m-liquid-s').textContent = 'of ' + fmt(D.items.length) + ' (' + (liquid.length / Math.max(1, D.items.length) * 100).toFixed(0) + '%)';
+  $('#m-value').textContent = short(D.items.reduce((a, i) => a + (i.value || 0), 0));
+  const top = [...liquid].sort((a, b) => (b.value || 0) - (a.value || 0))[0];
+  $('#m-top').textContent = top ? top.name : '—'; $('#m-top-s').textContent = top ? short(top.value) + ' gp traded' : ' ';
+  $('#m-nat').textContent = fmt(D.nat);
+  const bestAlch = liquid.filter(i => i.alch).map(i => ({ i, p: alchProfit(i, staff) })).sort((a, b) => b.p - a.p)[0];
+  $('#m-alch').textContent = bestAlch ? fmt(bestAlch.p) : '—'; $('#m-alch-s').textContent = bestAlch ? bestAlch.i.name + ' · per cast' : ' ';
+  $('#f-summary').innerHTML = `<b>${fmt(liquid.length)}</b> of ${fmt(D.items.length)} items pass. Removed: ${fmt(reasons.vol)} low volume, ${fmt(reasons.price)} below min price, ${fmt(reasons.value)} below min GP traded, ${fmt(reasons.novol)} with no volume data.`;
+  $('#st-times').textContent = D.updated ? 'GE data ' + D.updated : '—';
+  $('#watch-count').textContent = watch.size;
+  $('#items-built').textContent = ((window.RV_RS3_ITEMS || {}).builtAt || '?') + ', ' + fmt(META.size) + ' items';
+  renderMarket(); renderAlch(); renderNews(); if (MV.loaded) renderMovers(); renderCalc();
+}
+function card(i) {
+  const w = watch.has(i.name);
+  return `<button class="card" type="button" data-item="${esc(i.name)}">
+    <div class="nm"><span>${esc(i.name)} ${i.members ? '<span class="tag">M</span>' : ''}</span><span class="${w ? 'gold' : 'dim'}">${w ? '★' : ''}</span></div>
+    <div class="kv">
+      <div><span>Guide price</span><b class="gold">${fmt(i.price)}</b></div>
+      <div><span>Day volume</span><b>${short(i.vol)}</b></div>
+      <div><span>GP traded</span><b>${short(i.value)}</b></div>
+      <div><span>Buy limit / 4h</span><b>${i.limit ? fmt(i.limit) : '?'}</b></div>
+      <div><span>Tax at guide</span><b>${fmt(i.tax)}</b></div>
+      <div><span>High alch</span><b>${i.alch ? fmt(i.alch) : '—'}</b></div>
+    </div>
+  </button>`;
+}
+let allSort = { k: 'value', dir: -1 }, allShown = 100;
+function renderMarket() {
+  const L = liquid.filter(userFilter);
+  $('#grid-value').innerHTML = [...L].sort((a, b) => b.value - a.value).slice(0, 24).map(card).join('') || '<div class="empty">No items match.</div>';
+  $('#grid-volume').innerHTML = [...L].sort((a, b) => b.vol - a.vol).slice(0, 24).map(card).join('') || '<div class="empty">No items match.</div>';
+  renderAllTable();
+}
+function renderAllTable() {
+  let rows = D.items.filter(userFilter);
+  if ($('#all-liquid').checked) rows = rows.filter(i => i.liquid);
+  if ($('#all-watch').checked) rows = rows.filter(i => watch.has(i.name));
+  const { k, dir } = allSort;
+  rows.sort((a, b) => { const x = a[k], y = b[k]; if (typeof x === 'string') return dir * x.localeCompare(y); return dir * ((x ?? -Infinity) - (y ?? -Infinity)); });
+  $('#c-all').textContent = fmt(rows.length);
+  const flag = i => [i.liquid ? '' : '<span class="tag warn">' + ({ vol: 'LOW VOL', price: 'CHEAP', value: 'LOW GP', novol: 'NO VOL' }[liquidReason(i)] || '') + '</span>', i.name === 'Bond' ? '<span class="tag blue">NO TAX</span>' : '', watch.has(i.name) ? '<span class="gold">★</span>' : ''].join(' ');
+  $('#tbl-all tbody').innerHTML = rows.slice(0, allShown).map(i => `<tr>
+    <td class="name sticky"><button type="button" data-item="${esc(i.name)}">${esc(i.name)}</button> ${i.members ? '<span class="tag">M</span>' : ''}</td>
+    <td class="n gold">${fmt(i.price)}</td><td class="n">${short(i.vol)}</td><td class="n">${short(i.value)}</td><td class="n">${i.limit ? fmt(i.limit) : '?'}</td>
+    <td class="n">${fmt(i.tax)}</td><td class="n">${i.alch ? fmt(i.alch) : '—'}</td><td class="n ${cls(i.alchProfit)}">${i.alchProfit == null ? '—' : fmt(i.alchProfit)}</td><td>${flag(i)}</td></tr>`).join('') || '<tr><td colspan="9" class="empty">No items match.</td></tr>';
+  const more = $('#all-more'); more.hidden = rows.length <= allShown; more.textContent = 'Show more (' + fmt(rows.length - allShown) + ' left)';
+}
+
+/* ---------- flip calculator ---------- */
+function fillDatalist() { $('#c-items').innerHTML = [...D.items].sort((a, b) => (b.value || 0) - (a.value || 0)).map(i => `<option value="${esc(i.name)}">`).join(''); }
+function breakEven(buy, name) { // smallest sell price s with s - tax(s) >= buy
+  if (!buy) return null; let s = Math.ceil(buy / (1 - TAX_RATE)) - 2; if (s < buy) s = buy;
+  while (s - geTax(s, name) < buy) s++; return s;
+}
+function renderCalc() {
+  const name = $('#c-item').value.trim(), it = D.byName.get(name);
+  const buy = parseFloat($('#c-buy').value), sell = parseFloat($('#c-sell').value);
+  let qty = parseFloat($('#c-qty').value);
+  $('#c-qty-hint').textContent = it && it.limit ? 'buy limit ' + fmt(it.limit) + ' / 4h' : ' ';
+  if (!isFinite(qty) || qty < 1) qty = 1;
+  const box = (k, v, c = '', s = '') => `<div class="box"><div class="k">${k}</div><div class="v ${c}">${v}</div>${s ? `<div class="note">${s}</div>` : ''}</div>`;
+  if (!isFinite(buy) || !isFinite(sell)) { $('#c-out').innerHTML = box('Tax / item', '—') + box('Profit / item', '—') + box('Total profit', '—') + box('Break-even sell', isFinite(buy) ? fmt(breakEven(buy, name)) : '—'); return; }
+  const tax = geTax(sell, name), per = sell - tax - buy, tot = per * qty;
+  $('#c-out').innerHTML = box('Tax / item', fmt(tax), '', sell < 50 ? 'under 50 coins: no tax' : name === 'Bond' ? 'bonds are exempt' : '2%, rounded down') +
+    box('Profit / item', fmt(per), cls(per), pct(buy ? per / buy * 100 : null, 2) + ' ROI') + box('Total profit', fmt(tot), cls(tot), fmt(qty) + ' × ' + fmt(per)) +
+    box('Break-even sell', fmt(breakEven(buy, name)), '', 'lowest sell that covers buy + tax');
+}
+function initCalc() {
+  $('#c-item').addEventListener('change', () => { const it = D.byName.get($('#c-item').value.trim()); if (it) { $('#c-buy').value = it.price; $('#c-sell').value = it.price; $('#c-qty').value = it.limit || 1; } renderCalc(); });
+  ['#c-buy', '#c-sell', '#c-qty', '#c-item'].forEach(s => $(s).addEventListener('input', renderCalc));
+}
+
+/* ---------- movers (guide-price history) ---------- */
+const MV = { win: 1, dir: 'up', loaded: false, series: new Map() };
+async function series(id) {
+  if (MV.series.has(id)) return MV.series.get(id);
+  const key = 'rv_rs3_h_' + id, c = safeJSON(sessionStorage.getItem(key));
+  if (c && Date.now() - c.t < 3600e3) { MV.series.set(id, c.d); return c.d; }
+  const j = await getJSON(HIST(id)); const d = (j[String(id)] || []).map(p => [p.timestamp, p.price, p.volume ?? null]);
+  MV.series.set(id, d); try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d })); } catch (e) { /* storage full */ }
+  return d;
+}
+async function pool(tasks, n) { let i = 0; await Promise.all(Array.from({ length: n }, async () => { while (i < tasks.length) { const k = i++; try { await tasks[k](); } catch (e) { /* skip */ } } })); }
+function change(pts, days) {
+  if (!pts || pts.length < 2) return null;
+  const last = pts[pts.length - 1], target = last[0] - days * 864e5 + 6 * 36e5; // 6h tolerance for update times
+  let then = null; for (const p of pts) { if (p[0] <= target) then = p; else break; }
+  if (!then) return null;
+  return { then: then[1], thenTs: then[0], now: last[1], nowTs: last[0], dp: (last[1] / then[1] - 1) * 100 };
+}
+function sparkSVG(pts, w = 140, h = 30) {
+  if (!pts || pts.length < 2) return '<span class="dim">no data</span>';
+  const ys = pts.map(p => p[1]), mn = Math.min(...ys), mx = Math.max(...ys), n = pts.length - 1;
+  const d = pts.map((p, x) => (x / n * (w - 2) + 1).toFixed(1) + ',' + (h - 2 - (mx === mn ? .5 : (p[1] - mn) / (mx - mn)) * (h - 4)).toFixed(1)).join(' ');
+  const col = ys[ys.length - 1] >= ys[0] ? 'var(--up)' : 'var(--down)';
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="90-day guide price, low ${fmt(mn)}, high ${fmt(mx)}"><polyline fill="none" stroke="${col}" stroke-width="1.6" points="${d}"/></svg>`;
+}
+async function loadMovers() {
+  const n = +$('#mv-n').value;
+  MV.set = liquid.filter(i => i.id).sort((a, b) => b.value - a.value).slice(0, n);
+  $('#mv-load').disabled = true; let done = 0;
+  const tb = $('#tbl-movers tbody'); tb.innerHTML = `<tr><td colspan="7" class="empty">Loading history… <span id="mv-prog">0</span> / ${MV.set.length}</td></tr>`;
+  await pool(MV.set.map(i => async () => { await series(i.id); done++; const p = $('#mv-prog'); if (p) p.textContent = done; }), 4);
+  MV.loaded = true; $('#mv-load').disabled = false; $('#mv-load').textContent = 'Reload'; renderMovers();
+}
+function renderMovers() {
+  if (!MV.set) return;
+  const rows = MV.set.map(i => ({ i, s: MV.series.get(i.id), c: change(MV.series.get(i.id), MV.win) })).filter(r => r.c && userFilter(r.i));
+  rows.sort((a, b) => MV.dir === 'up' ? b.c.dp - a.c.dp : a.c.dp - b.c.dp);
+  const ex = rows[0] && rows[0].c;
+  $('#mv-note').innerHTML = `Change in official guide price over ${MV.win} day${MV.win > 1 ? 's' : ''} for the ${fmt(MV.set.length)} most-traded items by GP that pass your filter (${fmt(rows.length)} with enough history)${ex ? `, comparing the guide price on ${esc(dshort(ex.thenTs))} with ${esc(dshort(ex.nowTs))}` : ''}. Since 27 Jul 2026 a guide price can move up to 20% per update. Source: <a href="https://api.weirdgloop.org/" target="_blank" rel="noopener">Weird Gloop exchange history</a> (RuneScape Wiki).`;
+  $('#tbl-movers tbody').innerHTML = rows.slice(0, 25).map(r => `<tr>
+    <td class="name sticky"><button type="button" data-item="${esc(r.i.name)}">${esc(r.i.name)}</button></td>
+    <td>${sparkSVG(r.s)}</td><td class="n ${cls(r.c.dp)}"><b>${pct(r.c.dp)}</b></td><td class="n">${fmt(r.c.then)}</td><td class="n">${fmt(r.c.now)}</td>
+    <td class="n">${short(r.i.vol)}</td><td class="n">${short(r.i.value)}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">No items with enough history match your filters.</td></tr>';
+}
+
+/* ---------- High Alchemy ---------- */
+function renderAlch() {
+  const staff = $('#al-staff').checked, onlyLiquid = $('#al-liquid').checked;
+  const runes = D.nat == null ? null : D.nat + (staff ? 0 : 5 * (D.fire || 0));
+  let rows = D.items.filter(i => i.alch && userFilter(i) && (!onlyLiquid || i.liquid)).map(i => {
+    const p = alchProfit(i, staff); return { i, p, p4h: i.limit ? p * i.limit : null };
+  }).filter(r => r.p != null && r.p > 0);
+  const k = $('#al-sort').value; rows.sort((a, b) => ((b[k] ?? -Infinity) - (a[k] ?? -Infinity)) || b.p - a.p);
+  $('#al-note').innerHTML = `Rune cost per cast: <b>${fmt(runes)}</b> gp (1 nature rune ${fmt(D.nat)}${staff ? '; fire runes from your staff' : ' + 5 fire runes at ' + fmt(D.fire)}). ${fmt(rows.length)} items alch for more than they cost at guide price${onlyLiquid ? ' and pass the rarely-traded filter' : ''}. Profit / 4h = profit per cast × buy limit (casting time not counted). Guide prices can differ from what offers actually fill at.`;
+  $('#tbl-alch tbody').innerHTML = rows.slice(0, 50).map(r => `<tr>
+    <td class="name sticky"><button type="button" data-item="${esc(r.i.name)}">${esc(r.i.name)}</button> ${r.i.members ? '<span class="tag">M</span>' : ''}</td>
+    <td class="n up"><b>${fmt(r.p)}</b></td><td class="n ${cls(r.p4h)}">${r.p4h == null ? '?' : short(r.p4h)}</td><td class="n">${r.i.limit ? fmt(r.i.limit) : '?'}</td>
+    <td class="n">${fmt(r.i.price)}</td><td class="n gold">${fmt(r.i.alch)}</td><td class="n">${fmt(runes)}</td><td class="n">${short(r.i.vol)}</td></tr>`).join('') || '<tr><td colspan="8" class="empty">No profitable alchs with these filters.</td></tr>';
+}
+
+/* ---------- Update Watch: news mentions ---------- */
+function renderNews() {
+  const list = $('#news-list');
+  if (!NEWS) { list.innerHTML = '<div class="empty">News snapshot missing (data/rs3_news.js). Run tools/fetch_rs3_news.py.</div>'; return; }
+  const f = new Date(NEWS.fetchedAt);
+  $('#news-meta').innerHTML = `Posts from the <a href="${esc(NEWS.source)}" target="_blank" rel="noopener">official RuneScape news RSS</a>, <b>snapshot fetched ${esc(f.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }))} UTC</b>. Items are literal name matches, so a match can be a coincidence. "Before" = the last guide price before the post's UTC day; "Now" = today's guide price.`;
+  list.innerHTML = NEWS.posts.map(p => {
+    const rows = p.items.map(m => { const i = D.byName.get(m.name); const b = m.baseline && m.baseline.price; const now = i ? i.price : null; return { m, i, b, now, ch: b && now ? (now / b - 1) * 100 : null }; });
+    const table = rows.length ? `<div class="tbl-wrap"><table><thead><tr><th class="sticky">Mentioned item</th><th class="n">Δ since</th><th class="n">Before</th><th class="n">Now</th><th class="n">Day vol</th><th class="n">Mentions</th></tr></thead><tbody>${rows.map(r => `<tr>
+      <td class="name sticky"><button type="button" data-item="${esc(r.m.name)}">${esc(r.m.name)}</button> ${r.i && !r.i.liquid ? '<span class="tag warn">THIN</span>' : ''}</td>
+      <td class="n ${cls(r.ch)}"><b>${pct(r.ch)}</b></td><td class="n">${r.b ? fmt(r.b) : '<span class="dim" title="No guide price history before this post (new item, or older than 90 days)">—</span>'}</td><td class="n">${fmt(r.now)}</td><td class="n">${r.i ? short(r.i.vol) : '—'}</td><td class="n">${r.m.mentions}</td></tr>`).join('')}</tbody></table></div>`
+      : (p.readError ? '<p class="note">The post could not be downloaded for the snapshot (' + esc(p.readError) + ').</p>' : '<p class="note">No Grand Exchange item names were found in this post.</p>');
+    return `<article class="post"><div class="meta">${esc(p.date)} · ${esc(p.category || 'News')}</div><h3><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a></h3><p class="note">${esc(p.description)}</p>${table}</article>`;
+  }).join('');
+}
+
+/* ---------- item modal ---------- */
+let modalName = null;
+async function openItem(name) {
+  const i = D.byName.get(name); if (!i) return; modalName = name;
+  $('#md-name').textContent = i.name; $('#md-sub').textContent = (i.members ? 'Members' : 'F2P') + (i.id ? ' · item id ' + i.id : '');
+  updateWatchBtn();
+  const ap = alchProfit(i, $('#al-staff').checked);
+  $('#md-body').innerHTML = `<div class="mgrid">
+    <div class="box"><div class="k">Guide price</div><div class="v gold">${fmt(i.price)}</div><div class="note">${esc(D.updated || '')}</div></div>
+    <div class="box"><div class="k">Volume (prev. day)</div><div class="v">${fmt(i.vol)}</div><div class="note">${short(i.value)} gp traded</div></div>
+    <div class="box"><div class="k">Buy limit / 4h</div><div class="v">${i.limit ? fmt(i.limit) : '?'}</div><div class="note">tax at guide ${fmt(i.tax)}</div></div>
+    <div class="box"><div class="k">High alch</div><div class="v">${i.alch ? fmt(i.alch) : '—'}</div><div class="note ${cls(ap)}">${ap == null ? 'not alchable / no value' : 'profit ' + fmt(ap) + ' per cast'}</div></div>
+    <div class="box"><div class="k">Break-even sell</div><div class="v">${fmt(breakEven(i.price, i.name))}</div><div class="note">if bought at guide</div></div>
+    <div class="box"><div class="k">Passes filter</div><div class="v ${i.liquid ? 'up' : 'down'}">${i.liquid ? 'Yes' : 'No'}</div><div class="note">rarely-traded filter</div></div>
+  </div>
+  <div class="chart"><div class="note" style="margin:0 0 6px">Official guide price, last 90 days (Weird Gloop history)</div><div id="md-chart" class="dim">${i.id ? 'Loading…' : 'No item id in the snapshot, so no history.'}</div></div>
+  <p class="note"><a href="${wikiUrl(i.name)}" target="_blank" rel="noopener">Wiki article</a> · <a href="${WIKI}Exchange:${encodeURIComponent(i.name.replace(/ /g, '_'))}" target="_blank" rel="noopener">Wiki exchange page</a>${i.id ? ` · <a href="https://secure.runescape.com/m=itemdb_rs/viewitem?obj=${i.id}" target="_blank" rel="noopener">Official GE database</a>` : ''}</p>`;
+  const dlg = $('#item-modal'); if (!dlg.open) dlg.showModal();
+  if (!i.id) return;
+  try { const s = await series(i.id); if (modalName === name) $('#md-chart').innerHTML = s.length > 1 ? chartSVG(s) : 'No history.'; } catch (e) { if (modalName === name) $('#md-chart').textContent = 'History unavailable (' + e.message + ').'; }
+}
+function chartSVG(pts) {
+  const W = 700, H = 180, P = 44, ys = pts.map(p => p[1]), mn = Math.min(...ys), mx = Math.max(...ys), n = pts.length - 1 || 1;
+  const X = k => P + k / n * (W - P - 6), Y = v => 8 + (1 - (mx === mn ? .5 : (v - mn) / (mx - mn))) * (H - 30);
+  const d = pts.map((p, k) => (k ? 'L' : 'M') + X(k).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Guide price from ${fmt(mn)} to ${fmt(mx)} gp">
+    <line x1="${P}" x2="${W}" y1="${Y(mx)}" y2="${Y(mx)}" stroke="#334155"/><line x1="${P}" x2="${W}" y1="${Y(mn)}" y2="${Y(mn)}" stroke="#334155"/>
+    <text x="${P - 4}" y="${Y(mx) + 4}" fill="#94a3b8" font-size="11" text-anchor="end">${short(mx)}</text><text x="${P - 4}" y="${Y(mn) + 4}" fill="#94a3b8" font-size="11" text-anchor="end">${short(mn)}</text>
+    <path d="${d}" fill="none" stroke="#fbbf24" stroke-width="1.6"/>
+    <text x="${P}" y="${H - 4}" fill="#64748b" font-size="11">${dshort(pts[0][0])}</text><text x="${W - 6}" y="${H - 4}" fill="#64748b" font-size="11" text-anchor="end">${dshort(pts[n][0])}</text></svg>`;
+}
+function updateWatchBtn() { $('#md-watch').textContent = watch.has(modalName) ? '★ Watching' : '☆ Watch'; }
+
+/* ---------- events ---------- */
+function bindTabs(ids) { ids.forEach(t => $('#' + t).addEventListener('click', () => { ids.forEach(o => { const on = o === t; $('#' + o).setAttribute('aria-selected', on); $('#' + $('#' + o).getAttribute('aria-controls')).hidden = !on; }); })); }
+function bindSeg(sel, attr, fn) { document.querySelectorAll(sel + ' button').forEach(b => b.addEventListener('click', () => { b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); fn(b.dataset[attr]); })); }
+function setStatus(kind, text) { $('#st-dot').className = 'dot ' + kind; $('#st-text').textContent = text; }
+function init() {
+  const inputs = { '#f-minvol': 'minVol', '#f-minprice': 'minPrice', '#f-minvalue': 'minValue' };
+  const sync = () => { for (const [s, k] of Object.entries(inputs)) $(s).value = S[k]; }; sync();
+  let deb;
+  for (const [s, k] of Object.entries(inputs)) $(s).addEventListener('input', e => { const v = parseFloat(e.target.value); if (!isFinite(v) || v < 0) return; S[k] = v; saveSettings(); clearTimeout(deb); deb = setTimeout(() => D.items.length && renderAll(), 200); });
+  $('#f-reset').addEventListener('click', () => { Object.assign(S, DEFAULTS); saveSettings(); sync(); renderAll(); });
+  $('#f-search').addEventListener('input', () => { clearTimeout(deb); deb = setTimeout(() => { allShown = 100; renderMarket(); renderAlch(); if (MV.loaded) renderMovers(); }, 200); });
+  ['#f-members', '#f-maxprice'].forEach(s => $(s).addEventListener('change', () => { renderMarket(); renderAlch(); if (MV.loaded) renderMovers(); }));
+  ['#all-liquid', '#all-watch'].forEach(s => $(s).addEventListener('change', () => { allShown = 100; renderAllTable(); }));
+  $('#all-more').addEventListener('click', () => { allShown += 200; renderAllTable(); });
+  document.querySelectorAll('#tbl-all th button').forEach(b => b.addEventListener('click', () => { const k = b.dataset.sort; allSort = { k, dir: allSort.k === k ? -allSort.dir : (k === 'name' ? 1 : -1) }; renderAllTable(); }));
+  $('#al-staff').addEventListener('change', () => D.items.length && renderAll());
+  ['#al-liquid', '#al-sort'].forEach(s => $(s).addEventListener('change', () => { renderAlch(); }));
+  bindTabs(['mt-value', 'mt-volume', 'mt-all']); bindTabs(['ut-road', 'ut-news']);
+  bindSeg('#movers .seg[aria-label=Window]', 'win', v => { MV.win = +v; renderMovers(); });
+  bindSeg('#movers .seg[aria-label=Direction]', 'dir', v => { MV.dir = v; renderMovers(); });
+  $('#mv-load').addEventListener('click', loadMovers);
+  document.addEventListener('click', e => { const b = e.target.closest('[data-item]'); if (b) openItem(b.dataset.item); });
+  $('#md-close').addEventListener('click', () => $('#item-modal').close());
+  $('#item-modal').addEventListener('click', e => { if (e.target.id === 'item-modal') e.target.close(); });
+  $('#md-watch').addEventListener('click', () => { watch.has(modalName) ? watch.delete(modalName) : watch.add(modalName); localStorage.setItem('rv_rs3_watch', JSON.stringify([...watch])); updateWatchBtn(); $('#watch-count').textContent = watch.size; renderMarket(); });
+  $('#btn-watch').addEventListener('click', () => { $('#all-watch').checked = true; $('#all-liquid').checked = false; $('#mt-all').click(); renderAllTable(); document.getElementById('mk-h').scrollIntoView({ behavior: 'smooth' }); });
+  $('#btn-refresh').addEventListener('click', loadAll);
+  document.addEventListener('keydown', e => { if (e.key === '/' && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); $('#f-search').focus(); } });
+  initCalc();
+  if (window.RVRoadmap) RVRoadmap.render($('#rs3-roadmap'), 'rs3');
+  renderNews(); loadAll();
+}
+init();
+</script>
+</body>
+</html>
