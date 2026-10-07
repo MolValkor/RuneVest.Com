@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RuneVest · RuneScape: Dragonwilds roadmap, patch tracker and crafting reference</title>
+<meta name="description" content="RuneScape: Dragonwilds update roadmap from official Jagex sources, a patch tracker built from the official Steam announcements, and a searchable crafting, resource and boss-drop reference from the Dragonwilds Wiki.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#2a1d10">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23c8a24a'/%3E%3Cpath d='M6 22l6-7 5 4 9-11' stroke='%232b1d08' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/base.css">
+</head>
+<body data-game="dw">
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="../" aria-label="RuneVest hub">
+      <span class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 32 32"><path d="M4 23l7-8 6 5 11-13" stroke="#2b1d08" stroke-width="3.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span><b>RuneVest</b><small>DRAGONWILDS</small></span>
+    </a>
+    <nav class="games" aria-label="Games"><a href="../">Hub</a><a href="../osrs/">OSRS</a><a href="../rs3/">RS3</a><a href="./" aria-current="page">Dragonwilds</a></nav>
+    <div class="status"><span class="pill static" id="st-pill"><span class="dot ok"></span><span id="st-text">Snapshot</span></span></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>RuneScape: Dragonwilds</h1>
+    <p>A survival and crafting game set in Ashenfall. There is no Grand Exchange or player market, so there are no prices to track. This page covers what does exist: Jagex's announced roadmap, the official patch notes, and the game's recipes, resources and boss drops from the <a href="https://dragonwilds.runescape.wiki/" target="_blank" rel="noopener">RuneScape: Dragonwilds Wiki</a>.</p>
+    <nav class="jump" aria-label="Sections"><a href="#update-watch">Update Watch</a><a href="#patches">Patch tracker</a><a href="#crafting">Crafting</a><a href="#resources">Resources</a><a href="#bosses">Bosses</a></nav>
+  </section>
+
+  <section class="metrics" aria-label="Key numbers">
+    <div class="panel metric"><div class="k">Latest patch</div><div class="v" id="m-patch">—</div><div class="s" id="m-patch-s">&nbsp;</div></div>
+    <div class="panel metric"><div class="k">Next on the roadmap</div><div class="v" id="m-next" style="font-size:17px">—</div><div class="s" id="m-next-s">&nbsp;</div></div>
+    <div class="panel metric"><div class="k">Recipes</div><div class="v" id="m-rec">—</div><div class="s" id="m-rec-s">&nbsp;</div></div>
+    <div class="panel metric"><div class="k">Items</div><div class="v" id="m-items">—</div><div class="s">with wiki infoboxes</div></div>
+    <div class="panel metric"><div class="k">Resource nodes</div><div class="v" id="m-nodes">—</div><div class="s">trees, ores, plants…</div></div>
+    <div class="panel metric"><div class="k">Data snapshot</div><div class="v" id="m-built" style="font-size:17px">—</div><div class="s">tools/build_dragonwilds.py</div></div>
+  </section>
+
+  <section class="sec" id="update-watch" aria-labelledby="uw-h">
+    <div class="sec-head"><div><h2 id="uw-h">Update Watch</h2><p class="note">What Jagex has announced for Dragonwilds. The monthly 1.0.x dates come from Jagex's roadmap graphic as transcribed by the wiki; the Summit text itself gives months only for Luminance (December) and halves of 2027 for the rest.</p></div></div>
+    <div id="dw-roadmap"></div>
+  </section>
+
+  <section class="sec" id="patches" aria-labelledby="pt-h">
+    <div class="sec-head"><div><h2 id="pt-h">Patch tracker</h2><p class="note" id="pt-note">Official announcements posted by Jagex to the game's Steam news feed.</p></div></div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Type"><button data-pk="all" aria-pressed="false">All</button><button data-pk="patch" aria-pressed="true">Patches</button><button data-pk="hotfix" aria-pressed="false">Hotfixes</button><button data-pk="event" aria-pressed="false">Events</button><button data-pk="news" aria-pressed="false">News</button></div>
+      <div class="field" style="min-width:200px"><label for="pt-search">Search titles</label><input id="pt-search" type="search" placeholder="e.g. 0.12, Kuldra, agility" autocomplete="off"></div>
+    </div>
+    <div class="tbl-wrap"><table id="tbl-pt"><thead><tr><th class="sticky">Date</th><th>Version</th><th>Announcement</th><th>Type</th></tr></thead><tbody></tbody></table></div>
+    <div class="more"><button class="btn sm" id="pt-more" type="button" hidden>Show more</button></div>
+  </section>
+
+  <section class="sec" id="crafting" aria-labelledby="cr-h">
+    <div class="sec-head"><div><h2 id="cr-h">Crafting reference</h2><p class="note">Every recipe the wiki records (Bucket:Recipe, the data behind its recipe tables). Click a recipe for a breakdown down to raw materials.</p></div></div>
+    <div class="controls">
+      <div class="field" style="min-width:220px"><label for="cr-search">Search</label><input id="cr-search" type="search" placeholder="e.g. bronze, plank, wall, stew" autocomplete="off"></div>
+      <div class="field"><label for="cr-mode">Match</label><select id="cr-mode"><option value="out">What it makes</option><option value="in">What it uses</option><option value="any">Either</option></select></div>
+      <div class="field"><label for="cr-skill">Skill</label><select id="cr-skill"><option value="">All skills</option></select></div>
+      <label class="chk"><input type="checkbox" id="cr-build"> Include build-menu pieces</label>
+    </div>
+    <div class="chips" id="cr-chips" role="group" aria-label="Crafting station"></div>
+    <p class="note" id="cr-note">&nbsp;</p>
+    <div class="tbl-wrap"><table id="tbl-cr"><thead><tr><th class="sticky">Makes</th><th>Materials</th><th>Station</th><th class="n">XP</th></tr></thead><tbody></tbody></table></div>
+    <div class="more"><button class="btn sm" id="cr-more" type="button" hidden>Show more</button></div>
+  </section>
+
+  <section class="sec" id="resources" aria-labelledby="rs-h">
+    <div class="sec-head"><div><h2 id="rs-h">Resources</h2><p class="note">Resource nodes from the wiki's <a href="https://dragonwilds.runescape.wiki/w/Category:Resource_nodes" target="_blank" rel="noopener">Resource nodes</a> category and what each one drops (Bucket:Dropsline).</p></div></div>
+    <div class="controls"><div class="field" style="min-width:220px"><label for="rs-search">Search nodes or drops</label><input id="rs-search" type="search" placeholder="e.g. iron, yew, flax" autocomplete="off"></div></div>
+    <div class="tbl-wrap"><table id="tbl-rs"><thead><tr><th class="sticky">Node</th><th>Drops (quantity · rarity)</th><th>Used in</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="sec" id="bosses" aria-labelledby="bs-h">
+    <div class="sec-head"><div><h2 id="bs-h">Bosses</h2><p class="note">From the wiki's <a href="https://dragonwilds.runescape.wiki/w/Category:Bosses" target="_blank" rel="noopener">Bosses</a> category, with recorded drops. Some pages have no drop data yet; the wiki is community-maintained.</p></div></div>
+    <div class="grid" id="boss-grid"></div>
+  </section>
+
+  <footer>
+    <p><b>Data:</b> recipes, items, drops and NPCs are a snapshot of the RuneScape: Dragonwilds Wiki's structured data (<a href="https://dragonwilds.runescape.wiki/w/Bucket:Recipe" target="_blank" rel="noopener">Bucket:Recipe</a>, <a href="https://dragonwilds.runescape.wiki/w/Bucket:Infobox_item" target="_blank" rel="noopener">Bucket:Infobox_item</a>, <a href="https://dragonwilds.runescape.wiki/w/Bucket:Dropsline" target="_blank" rel="noopener">Bucket:Dropsline</a>), content under the wiki's CC BY-NC-SA 3.0 licence. Patch notes: Jagex's announcements on <a href="https://store.steampowered.com/news/app/1374490" target="_blank" rel="noopener">Steam</a>. Rebuild with <code>python3 tools/build_dragonwilds.py</code>.</p>
+    <p>No trackers, no analytics, no cookies. Not affiliated with Jagex or the RuneScape Wiki.</p>
+  </footer>
+</main>
+
+<dialog id="rc-modal" aria-labelledby="rc-name">
+  <div class="mhead">
+    <div><h2 id="rc-name">Recipe</h2><div class="note" id="rc-sub"></div></div>
+    <div style="display:flex;gap:6px;align-items:center"><label class="note" for="rc-qty" style="margin:0">Make</label><input id="rc-qty" type="number" min="1" value="1" inputmode="numeric" style="width:70px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:4px 6px"><button class="btn sm" id="rc-close" type="button" aria-label="Close">✕</button></div>
+  </div>
+  <div class="mbody" id="rc-body"></div>
+</dialog>
+
+<script src="../data/dragonwilds.js"></script>
+<script src="../data/roadmaps.js"></script>
+<script src="../assets/roadmap.js"></script>
+<script>
+'use strict';
+const DW = window.RV_DW || { recipes: [], items: {}, bosses: [], nodes: [], news: [], sources: {} };
+const $ = s => document.querySelector(s);
+const NF = new Intl.NumberFormat('en-US');
+const fmt = n => (n == null || !isFinite(n)) ? '—' : NF.format(Math.round(n * 100) / 100);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const wiki = n => DW.wiki + encodeURIComponent(String(n).replace(/ /g, '_'));
+const link = n => `<a href="${wiki(n)}" target="_blank" rel="noopener">${esc(n)}</a>`;
+const fmtDate = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); };
+
+// recipes by output; uses by material
+const BY_OUT = new Map(), USES = new Map();
+DW.recipes.forEach((r, k) => { r.k = k; if (!BY_OUT.has(r.out)) BY_OUT.set(r.out, []); BY_OUT.get(r.out).push(r); for (const [m] of r.mats) { if (!USES.has(m)) USES.set(m, new Set()); USES.get(m).add(r.out); } });
+
+/* ---------- metrics ---------- */
+function metrics() {
+  const patch = DW.news.find(n => n.kind === 'patch' && n.version) || DW.news[0];
+  if (patch) { $('#m-patch').textContent = patch.version || '—'; $('#m-patch-s').textContent = fmtDate(patch.date); }
+  const nx = window.RVRoadmap ? RVRoadmap.upcoming(['dw'], 1)[0] : null;
+  if (nx) { $('#m-next').textContent = nx.it.title.replace(/ \(.*\)$/, ''); $('#m-next-s').textContent = RVRoadmap.whenLabel(nx.it) + ' · ' + ({ official: 'official', 'roadmap-image': 'roadmap graphic' }[nx.it.basis] || nx.it.basis); }
+  $('#m-rec').textContent = fmt(DW.recipes.length); $('#m-rec-s').textContent = fmt(DW.recipes.filter(r => r.fac !== 'Build Menu').length) + ' outside the build menu';
+  $('#m-items').textContent = fmt(Object.keys(DW.items).length);
+  $('#m-nodes').textContent = fmt(DW.nodes.length);
+  $('#m-built').textContent = DW.builtAt ? DW.builtAt.slice(0, 10) : '—';
+  $('#st-text').textContent = 'Snapshot ' + (DW.builtAt ? DW.builtAt.slice(0, 10) : '');
+}
+
+/* ---------- patch tracker ---------- */
+let ptKind = 'patch', ptShown = 25;
+function renderPatches() {
+  const q = $('#pt-search').value.trim().toLowerCase();
+  const rows = DW.news.filter(n => (ptKind === 'all' || n.kind === ptKind) && (!q || n.title.toLowerCase().includes(q)));
+  const tag = { patch: '<span class="tag">PATCH</span>', hotfix: '<span class="tag warn">HOTFIX</span>', event: '<span class="tag blue">EVENT</span>', news: '<span class="tag gray">NEWS</span>' };
+  $('#pt-note').innerHTML = `${fmt(DW.news.length)} official announcements from Jagex's <a href="${esc(DW.sources.news)}" target="_blank" rel="noopener">Steam news feed</a>, ${esc(DW.news.length ? fmtDate(DW.news[DW.news.length - 1].date) : '')} to ${esc(DW.news.length ? fmtDate(DW.news[0].date) : '')} (snapshot ${esc((DW.builtAt || '').slice(0, 10))}). Type is guessed from the title (version number, "hotfix", "event").`;
+  $('#tbl-pt tbody').innerHTML = rows.slice(0, ptShown).map(n => `<tr>
+    <td class="sticky" style="white-space:nowrap">${esc(fmtDate(n.date))}</td><td class="mono">${esc(n.version || '')}</td>
+    <td style="white-space:normal;min-width:260px"><a href="${esc(n.url)}" target="_blank" rel="noopener" style="font-weight:600">${esc(n.title)}</a><div class="dim" style="font-size:11px;max-width:640px">${esc(n.excerpt.slice(0, 200))}${n.excerpt.length > 200 ? '…' : ''}</div></td>
+    <td>${tag[n.kind] || ''}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">No announcements match.</td></tr>';
+  const more = $('#pt-more'); more.hidden = rows.length <= ptShown; more.textContent = 'Show more (' + fmt(rows.length - ptShown) + ' left)';
+}
+
+/* ---------- crafting ---------- */
+let crFac = 'all', crShown = 60;
+const matsTxt = r => r.mats.map(([m, q]) => `<span class="q">${fmt(q)}×</span> ${esc(m)}`).join(', ');
+function crRows() {
+  const q = $('#cr-search').value.trim().toLowerCase(), mode = $('#cr-mode').value, sk = $('#cr-skill').value, build = $('#cr-build').checked;
+  return DW.recipes.filter(r => {
+    if (!build && r.fac === 'Build Menu' && crFac !== 'Build Menu') return false;
+    if (sk && !r.skills.some(s => s[0] === sk)) return false;
+    if (!q) return true;
+    const o = r.out.toLowerCase().includes(q), i = r.mats.some(([m]) => m.toLowerCase().includes(q));
+    return mode === 'out' ? o : mode === 'in' ? i : (o || i);
+  });
+}
+function renderCraft() {
+  const base = crRows();
+  const cnt = {}; base.forEach(r => cnt[r.fac] = (cnt[r.fac] || 0) + 1);
+  const facs = Object.entries(cnt).sort((a, b) => b[1] - a[1]);
+  $('#cr-chips').innerHTML = `<button class="chip" data-fac="all" aria-pressed="${crFac === 'all'}">All<span class="cnt">${fmt(base.length)}</span></button>` + facs.map(([f, c]) => `<button class="chip" data-fac="${esc(f)}" aria-pressed="${crFac === f}">${esc(f || 'Unknown')}<span class="cnt">${fmt(c)}</span></button>`).join('');
+  const rows = base.filter(r => crFac === 'all' || r.fac === crFac).sort((a, b) => a.out.localeCompare(b.out));
+  $('#cr-note').innerHTML = `${fmt(rows.length)} recipes shown of ${fmt(DW.recipes.length)}${$('#cr-build').checked ? '' : ' (build-menu base pieces hidden; tick the box or pick the Build Menu chip to see them)'}. Recipe data has XP per craft but no level requirements.`;
+  $('#tbl-cr tbody').innerHTML = rows.slice(0, crShown).map(r => `<tr>
+    <td class="name sticky"><button type="button" data-rc="${r.k}">${esc(r.out)}</button>${r.qty !== 1 ? ` <span class="dim">×${fmt(r.qty)}</span>` : ''}${(BY_OUT.get(r.out) || []).length > 1 ? ' <span class="tag gray" title="This item has more than one recipe">ALT</span>' : ''}</td>
+    <td class="cr-legs">${matsTxt(r)}</td><td>${esc(r.fac)}</td>
+    <td class="n">${r.skills.filter(s => s[1] != null).map(s => fmt(s[1]) + ' ' + esc(s[0])).join('<br>') || '<span class="dim">—</span>'}</td></tr>`).join('') || '<tr><td colspan="4" class="empty">No recipes match.</td></tr>';
+  const more = $('#cr-more'); more.hidden = rows.length <= crShown; more.textContent = 'Show more (' + fmt(rows.length - crShown) + ' left)';
+}
+// Expand a recipe down to raw materials. Uses the first wiki recipe for each intermediate.
+function expand(r, crafts, path, raw) {
+  const html = r.mats.map(([m, q]) => {
+    const need = q * crafts, sub = BY_OUT.get(m);
+    if (sub && sub.length && !path.has(m) && path.size < 8) {
+      const s = sub[0], n = Math.ceil(need / s.qty);
+      const p2 = new Set(path); p2.add(m);
+      return `<li><span class="q">${fmt(need)}×</span> ${link(m)} <span class="fac">make ${fmt(n)}× at ${esc(s.fac)}${sub.length > 1 ? ` · 1 of ${sub.length} recipes` : ''}</span><ul>${expand(s, n, p2, raw)}</ul></li>`;
+    }
+    raw.set(m, (raw.get(m) || 0) + need);
+    return `<li><span class="q">${fmt(need)}×</span> ${link(m)} <span class="fac">raw</span></li>`;
+  }).join('');
+  return html;
+}
+let rcCur = null;
+function openRecipe(k) {
+  const r = DW.recipes[k]; if (!r) return; rcCur = r;
+  const qty = Math.max(1, parseInt($('#rc-qty').value, 10) || 1), crafts = Math.ceil(qty / r.qty);
+  const it = DW.items[r.out] || {};
+  $('#rc-name').textContent = r.out;
+  $('#rc-sub').textContent = [it.type, r.fac, r.skills.map(s => s[0] + (s[1] != null ? ' ' + s[1] + ' XP' : '')).join(', ')].filter(Boolean).join(' · ');
+  const raw = new Map(), tree = expand(r, crafts, new Set([r.out]), raw);
+  const alts = (BY_OUT.get(r.out) || []).filter(x => x !== r);
+  const usedIn = [...(USES.get(r.out) || [])].sort();
+  const stats = ['weight', 'stacklimit', 'health', 'sustenance', 'hydration', 'durability'].filter(x => it[x] != null).map(x => `<div class="box"><div class="k">${x}</div><div class="v" style="font-size:16px">${esc(it[x])}</div></div>`).join('');
+  $('#rc-body').innerHTML = `${it.desc ? `<p class="note" style="margin-top:0">“${esc(it.desc)}”</p>` : ''}
+    ${stats ? `<div class="mgrid" style="margin-bottom:10px">${stats}</div>` : ''}
+    <h3>${fmt(crafts)} craft${crafts > 1 ? 's' : ''} at ${esc(r.fac)} → ${fmt(crafts * r.qty)}× ${esc(r.out)}</h3>
+    <div class="tree" style="margin-top:6px"><ul>${tree}</ul></div>
+    <h3 style="margin-top:14px">Raw materials in total</h3>
+    <p class="note">${[...raw.entries()].sort((a, b) => b[1] - a[1]).map(([m, q]) => `<span class="q" style="color:var(--gold2);font-weight:700">${fmt(q)}×</span> ${link(m)}`).join(' · ')}</p>
+    <p class="note">Intermediates use the first recipe the wiki lists; quantities round up to whole crafts.</p>
+    ${alts.length ? `<h3 style="margin-top:14px">Other recipes for ${esc(r.out)}</h3><ul class="note">${alts.map(a => `<li><button class="btn sm" type="button" data-rc="${a.k}">open</button> ${matsTxt(a)} · ${esc(a.fac)}</li>`).join('')}</ul>` : ''}
+    ${usedIn.length ? `<h3 style="margin-top:14px">Used to make (${usedIn.length})</h3><p class="note">${usedIn.slice(0, 60).map(o => `<button type="button" class="chip" data-rcout="${esc(o)}">${esc(o)}</button>`).join(' ')}${usedIn.length > 60 ? ' …' : ''}</p>` : ''}
+    <p class="note"><a href="${wiki(r.page)}" target="_blank" rel="noopener">Wiki page: ${esc(r.page)}</a></p>`;
+  const d = $('#rc-modal'); if (!d.open) d.showModal();
+}
+
+/* ---------- resources & bosses ---------- */
+function renderResources() {
+  const q = $('#rs-search').value.trim().toLowerCase();
+  const rows = DW.nodes.filter(n => !q || n.name.toLowerCase().includes(q) || n.drops.some(d => (d[0] || '').toLowerCase().includes(q)));
+  $('#tbl-rs tbody').innerHTML = rows.map(n => {
+    const used = [...new Set(n.drops.flatMap(d => [...(USES.get(d[0]) || [])]))];
+    return `<tr><td class="name sticky">${link(n.name)}</td>
+    <td style="white-space:normal;min-width:220px">${n.drops.length ? n.drops.map(d => `${esc(d[0])} <span class="dim">${esc(d[1])}${d[2] ? ' · ' + esc(d[2]) : ''}</span>`).join('<br>') : '<span class="dim">no drop data on the wiki</span>'}</td>
+    <td style="white-space:normal;min-width:200px" class="cr-legs">${used.length ? used.slice(0, 8).map(o => `<button type="button" class="chip" data-rcout="${esc(o)}">${esc(o)}</button>`).join(' ') + (used.length > 8 ? ` <span class="dim">+${used.length - 8} more</span>` : '') : '<span class="dim">—</span>'}</td></tr>`;
+  }).join('') || '<tr><td colspan="3" class="empty">No nodes match.</td></tr>';
+}
+function renderBosses() {
+  $('#boss-grid').innerHTML = DW.bosses.map(b => `<div class="panel"><div class="nm" style="font-weight:700;font-size:15px">${link(b.name)}</div>
+    <div class="note">${[b.race, b.location].filter(Boolean).map(esc).join(' · ') || '&nbsp;'}</div>
+    <div style="margin-top:8px;font-size:12px">${b.drops.length ? b.drops.map(d => `${esc(d[0])} <span class="dim">${esc(d[1])}${d[2] ? ' · ' + esc(d[2]) : ''}</span>`).join('<br>') : '<span class="dim">No drop data on the wiki yet.</span>'}</div></div>`).join('');
+}
+
+/* ---------- init ---------- */
+function bindSeg(sel, attr, fn) { document.querySelectorAll(sel + ' button').forEach(b => b.addEventListener('click', () => { b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); fn(b.dataset[attr]); })); }
+function init() {
+  metrics();
+  if (window.RVRoadmap) RVRoadmap.render($('#dw-roadmap'), 'dw');
+  const skills = [...new Set(DW.recipes.flatMap(r => r.skills.map(s => s[0])))].sort();
+  $('#cr-skill').innerHTML += skills.map(s => `<option>${esc(s)}</option>`).join('');
+  bindSeg('#patches .seg', 'pk', v => { ptKind = v; ptShown = 25; renderPatches(); });
+  $('#pt-search').addEventListener('input', () => { ptShown = 25; renderPatches(); });
+  $('#pt-more').addEventListener('click', () => { ptShown += 50; renderPatches(); });
+  let deb;
+  $('#cr-search').addEventListener('input', () => { clearTimeout(deb); deb = setTimeout(() => { crShown = 60; renderCraft(); }, 150); });
+  ['#cr-mode', '#cr-skill', '#cr-build'].forEach(s => $(s).addEventListener('change', () => { crShown = 60; renderCraft(); }));
+  $('#cr-chips').addEventListener('click', e => { const b = e.target.closest('[data-fac]'); if (!b) return; crFac = b.dataset.fac; crShown = 60; renderCraft(); });
+  $('#cr-more').addEventListener('click', () => { crShown += 100; renderCraft(); });
+  $('#rs-search').addEventListener('input', renderResources);
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-rc]'); if (b) { openRecipe(+b.dataset.rc); return; }
+    const o = e.target.closest('[data-rcout]'); if (o) { const r = (BY_OUT.get(o.dataset.rcout) || [])[0]; if (r) { $('#rc-qty').value = 1; openRecipe(r.k); } }
+  });
+  $('#rc-qty').addEventListener('input', () => rcCur && openRecipe(rcCur.k));
+  $('#rc-close').addEventListener('click', () => $('#rc-modal').close());
+  $('#rc-modal').addEventListener('click', e => { if (e.target.id === 'rc-modal') e.target.close(); });
+  renderPatches(); renderCraft(); renderResources(); renderBosses();
+}
+init();
+</script>
+</body>
+</html>
